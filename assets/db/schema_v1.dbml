@@ -1,0 +1,306 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+// Start default enums
+Enum language_codes {
+  "none"
+  "ru"
+  "en"
+}
+
+Enum roles {
+  "user" [note: "Просто авторизированный пользователь"]
+  "author" [note: "Автор книг"]
+  "publisher" [note: "Издатель книг"]
+  "administrator" [note: "Администратор"]
+}
+
+Enum request_status{
+  "pending"
+  "approved"
+  "rejected"
+}
+
+Enum file_status{
+  "active"
+  "expired"
+  "deleted"
+}
+
+Enum personal_list_status{
+  "default"
+  "created"
+}
+
+Enum allowed_file_formats{
+  "application/x-fictionbook+xml"     // FB2
+  "application/epub+zip"              // EPUB
+  "application/pdf"                   // PDF
+  "text/markdown"                     // Markdown
+  "image/png"                         // PNG
+  "image/jpeg"                        // JPEG
+  "application/zip"                   // ZIP
+}
+
+Enum allowed_book_file_formats{
+  "application/x-fictionbook+xml"     // FB2
+  "application/epub+zip"              // EPUB
+  "text/markdown"                     // Markdown
+}
+
+// End default enums
+
+
+Table languages {
+  language_id integer [pk, increment]
+  language_code language_codes [not null, unique, note: "Языковой код ('en', 'ru' и т.п.)"]
+  language_name varchar(50) [not null, note: 'Название языка']
+}
+
+
+Table files{
+  file_id integer [pk, increment, not null]
+  added_user integer [ref: > users.user_id]
+  file_name varchar(255) [not null]
+  s3_key varchar(500) [not null, unique]
+  bucket_name varchar(255) [not null]
+  file_url varchar(1000) [null]
+  mime_type varchar(100) [null]
+  uploaded_at timestamp [default: `now()`]
+  expires_at timestamp [null]
+  status file_status [default: "active"]
+}
+
+
+// START user group
+Table users{
+  user_id integer [pk, increment, not null]
+  username varchar(128) [unique]
+  role roles [
+    default: "user",
+     note: "Тип пользователя от просто авторизированного, до администратора"
+      ]
+  created_at timestamp
+}
+
+Table user_details{
+  user_id integer [Ref: - users.user_id]
+  description text
+  user_title_image_id int [ref: - files.file_id, note: "ID файла изображения аватарки"]
+}
+
+Table user_auth{
+  user_id integer [Ref: - users.user_id]
+  email varchar(128) [unique]
+  password varchar(256)
+  password_store_type varchar(32)
+}
+
+  // START Bookmarks group
+  Table user_bookmarks {
+    bookmarkd_id integer [pk, not null, increment]
+    user_id integer [not null, ref: - users.user_id]
+    book_id integer [not null, ref: - books.book_id]
+    bookmark bigint [not null, default: 0]
+    book_file_type allowed_book_file_formats [not null]
+
+    created_at timestamp [not null, default: `now()`]
+
+    Indexes {
+      ( user_id, book_id ) [ unique ]
+    }
+  }
+
+  Table bookmark_epub{
+    bookmark_id integer [not null, ref: - user_bookmarks.bookmarkd_id]
+    location varchar(255) [not null]
+  }
+
+  Table bookmark_fb2{
+    bookmark_id integer [not null, ref: - user_bookmarks.bookmarkd_id]
+    position integer [not null]
+  }
+
+  Table bookmark_markdown{
+    bookmark_id integer [not null, ref: - user_bookmarks.bookmarkd_id]
+    heading TEXT [not null]
+  }
+  // END Bookmarks group
+
+Table user_personal_lists [
+  note:
+  '''
+    Таблица описывает персональные списки пользователей для произведений.
+     При создании нового пользователя, у него должны быть сгенерированы
+     списки по умолчанию, в зависимости от языкового кода:
+     + Читаю (Reading)
+     + В планах (Plans)
+     + Брошено (Dropped)
+     + Прочитано (Readed)
+     + Любимое (Likes)
+     '''
+  ] {
+    user_id integer [ref: > users.user_id]
+    personal_list_id integer [pk, not null, increment]
+    list_name varchar(32) [not null]
+    list_type personal_list_status [
+      not null,
+      note: "Может ли пользователь редактировать этот список"
+    ]
+
+    Indexes {
+      (user_id, list_name) [unique]
+    }
+}
+
+Table user_personal_lists_items{
+  personal_list_id integer [ref: > user_personal_lists.personal_list_id]
+  book_id integer [ref: > books.book_id]
+}
+
+// END user group
+
+
+// START requests group
+Table author_requests [
+  note: '''Таблица тикетов для администратора на становления автором контента'''
+]{
+  author_requests_id integer [pk, increment, not null]
+  user_id integer [ref: > users.user_id, not null]
+  status request_status [default: 'pending']
+  reviewed_at timestamp [null, note: 'Время рассмотрения заявки']
+  reviewed_user_id integer [ref: > users.user_id, not null]
+}
+
+Table publisher_requests [
+  note: '''Таблица тикетов для администратора на становления издателем контента'''
+]{
+  publisher_requests_id integer [pk, increment, not null]
+  user_id integer [ref: > users.user_id, not null]
+  status request_status [default: 'pending']
+  reviewed_at timestamp [null, note: 'Время рассмотрения заявки']
+  reviewed_user_id integer [ref: > users.user_id, not null]
+}
+
+Table support_requests [
+  note:  '''Таблица тикетов для администратора содержащия сообщения об ошибках и т.п.'''
+]{
+  support_requests_id integer [pk, increment, not null]
+  user_id integer [ref: > users.user_id, not null]
+  status request_status [default: 'pending']
+  reviewed_at timestamp [null, note: 'Время рассмотрения заявки']
+  reviewed_user_id integer [ref: > users.user_id, not null]
+  subject varchar(255) [not null, note: 'Тема запроса']
+  message text [not null, note: 'Сообщение запроса']
+}
+// END requests group
+
+
+// START authors group
+table author_curators{
+  author_curator_id integer [pk, not null, increment]
+  account_id integer [ref: - users.user_id, not null]
+  author_id integer [ref: - authors.author_id]
+}
+
+Table authors{
+  author_id integer [pk, not null, increment]
+  first_name varchar(255)
+  last_name varchar(255)
+  contact_email varchar(255) [not null]
+  website varchar(1024) [not null]
+  birthday timestap [not null]
+  nationaly varchar(255) [null]
+  description text [not null]
+}
+
+Table book_authors {
+  book_id integer [ref: > books.book_id]
+  author_id integer [ref: > authors.author_id]
+}
+// END authors group
+
+
+// START publishers group
+Table publishers {
+  publisher_id integer [pk, not null, increment]
+  name varchar(255) [not null]
+  website varchar(1024) [not null]
+  contact_email varchar(255) [not null]
+  phone varchar(50) [not null]
+  founded_year YEAR [not null]
+  description text [not null]
+  created_at timestamp [not null]
+
+}
+
+Table publisher_curators{
+  publisher_curator_id integer [pk, not null, increment]
+  account_id integer [ref: - users.user_id, not null]
+  publisher_id integer [ref: - publishers.publisher_id]
+}
+
+Table book_publishers{
+  publisher_id integer [ref: > publishers.publisher_id]
+  book_id integer [ref: > books.book_id]
+}
+// END publishers group
+
+
+// START books group
+// START book genres group
+Table genres{
+  genre_id integer [pk, not null, increment]
+}
+
+Table book_genres{
+  book_id integer [not null, ref: > books.book_id]
+  genre_id integer [not null, ref: > genres.genre_id]
+}
+
+Table genres_translations{
+  genre_id integer [not null, ref: > genres.genre_id]
+  genre_name varchar(255) [not null]
+  language_id integer [not null, ref: > languages.language_id, note: 'Отвечает за локализацию']
+
+  indexes {
+    (genre_id, language_id) [unique]
+  }
+}
+// END book genres group
+
+Table books{
+  book_id integer [pk]
+  added_user integer [ref: > users.user_id]
+  book_publication_date varchar(64) [null]
+  book_file_type allowed_book_file_formats [not null]
+  book_content integer [ref: - files.file_id, not null]
+}
+
+Table book_translations {
+  // books_localization_id [pk, not null, increment]
+  book_id integer [ref: - books.book_id, not null]
+  language_id integer [not null, ref: > languages.language_id, note: 'Отвечает за локализацию']
+  book_description text [null]
+  book_title text [not null]
+
+}
+
+Table book_rating{
+  rating_id integer [pk, not null, increment]
+  user_id integer [not null, ref: - users.user_id]
+  book_id integer [not null, ref: - books.book_id]
+  rating integer [not null, default: 0, note: 'CHECK (rating >= 0 AND rating <= 5)']
+
+  Indexes {
+    (user_id, book_id) [unique]
+  }
+}
+
+Table book_comments{
+  comment_id integer [pk, not null, increment]
+  book_id integer [ref: > books.book_id]
+  language_id integer [not null, ref: > languages.language_id, note: 'Отвечает за локализацию']
+  message text [not null]
+}
+// END books group

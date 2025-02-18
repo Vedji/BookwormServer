@@ -1,0 +1,8 @@
+pydantic-settings~=2.7.1
+pydantic~=2.11.0a2
+uvicorn~=0.34.0
+fastapi~=0.115.8
+SQLAlchemy~=2.0.38
+pytest~=8.3.4
+PyJWT~=2.10.1
+passlib~=1.7.4
