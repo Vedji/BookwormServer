@@ -1,5 +1,6 @@
-from utils.config import settings
 from fastapi import FastAPI
+
+from app.utils import settings
 
 
 app = FastAPI(
@@ -11,7 +12,8 @@ app = FastAPI(
     version="1.0.0"
 )
 
-from api_routes import users
+from app.api import users
+
 app.include_router(prefix="/api/v1", router=users.v1_router)
 
 

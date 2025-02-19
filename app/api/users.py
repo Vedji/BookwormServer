@@ -1,10 +1,15 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.services import Users
+from app.db import get_db
 
 v1_router = APIRouter(prefix="/users", tags=["v1/Users"])
 
 
 @v1_router.get(path="/")
-async def v1_get_users():
+async def v1_get_users(db: AsyncSession  = Depends(get_db)):
+    await Users.get(db)
     return {"message": "Получить пользователей"}
 
 
