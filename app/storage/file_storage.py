@@ -14,20 +14,38 @@ class FileStorage(ABC):
             file: UploadFile = File(...),
             file_acl: S3ACL = S3ACL.PRIVATE
     ) -> Response:
-        """Метод для загрузки файла"""
+        """
+        Абстрактный метод для загрузки файла
+
+        :param file_key: Ключ файла (`{Путь к файлу}/{имя файла}`)
+        :param file: Данные файла
+        :param file_acl: Права доступа (Только для S3)
+        """
         pass
 
     @abstractmethod
     async def read_file(self, file_key: str) -> Response:
-        """Метод для получения файла"""
+        """
+        Абстрактный метод для чтения файла
+
+        :param file_key: Ключ файла (`{Путь к файлу}/{имя файла}`)
+        """
         pass
 
     @abstractmethod
     async def replace_file(self, file_key: str, new_file: UploadFile = File(...)) -> Response:
-        """Метод для замены файла"""
+        """
+        Абстрактный метод для замены файла
+
+        :param file_key: Ключ файла (`{Путь к файлу}/{имя файла}`)
+        :param new_file: Новый файл для замены
+        """
         pass
 
     @abstractmethod
     async def delete_file(self, file_key: str) -> Response:
-        """ Метод для удаления файла"""
+        """
+        Абстрактный метод для удаления файла
+        :param file_key: Ключ файла (`{Путь к файлу}/{имя файла}`)
+        """
         pass

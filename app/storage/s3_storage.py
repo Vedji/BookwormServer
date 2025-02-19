@@ -3,7 +3,7 @@ import aioboto3
 from botocore.config import Config
 from pydantic import Field
 
-from app.utils import settings, errors
+from app.utils import errors
 from app.schemas.constants import S3ACL
 
 from .file_storage import FileStorage
@@ -46,7 +46,14 @@ class S3Storage(FileStorage):
             file_key: str = Field(...),
             file: UploadFile = File(...),
             file_acl: S3ACL = S3ACL.PRIVATE
-        ) -> Response:
+    ) -> Response:
+        """
+        Загрузка файла в S3-хранилище
+        :param file_key: Ключ файла (`{Путь к файлу}/{имя файла}`)
+        :param file: Данные файла
+        :param file_acl: Права доступа
+        """
+
         file_key = f"{self.s3_project_prefix}{file_key}"
         content_type = file.content_type if file.content_type else "application/octet-stream"
         extra_args = {
@@ -59,6 +66,11 @@ class S3Storage(FileStorage):
 
     @errors.handle_s3_errors
     async def read_file(self, file_key: str) -> Response:
+        """
+        Чтение файла из S3-хранилища
+        :param file_key: Ключ файла (`{Путь к файлу}/{имя файла}`)
+        """
+
         file_key = f"{self.s3_project_prefix}{file_key}"
         async with self.session.client('s3', endpoint_url=self.s3_url, config=self.s3_config) as s3:
             response = await s3.get_object(Bucket=self.bucket_name, Key=file_key)
@@ -68,6 +80,13 @@ class S3Storage(FileStorage):
 
     @errors.handle_s3_errors
     async def replace_file(self, file_key: str, new_file: UploadFile = File(...)) -> Response:
+        """
+        Замена файла в локальном хранилище
+
+        :param file_key: Ключ файла (`{Путь к файлу}/{имя файла}`)
+        :param new_file: Новый файл для замены
+        """
+
         deleted = await self.delete_file(file_key)
         if not deleted:
             raise HTTPException(status_code=500, detail=f"Ошибка: не удалось удалить файл {file_key}")
@@ -76,6 +95,12 @@ class S3Storage(FileStorage):
 
     @errors.handle_s3_errors
     async def delete_file(self, file_key: str) -> Response:
+        """
+        Удаление файла из S3-хранилища
+
+        :param file_key: Ключ файла (`{Путь к файлу}/{имя файла}`)
+        """
+
         file_key = f"{self.s3_project_prefix}{file_key}"
         async with self.session.client('s3', endpoint_url=self.s3_url, config=self.s3_config) as s3:
             await s3.delete_object(Bucket=self.bucket_name, Key=file_key)
