@@ -1,5 +1,13 @@
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 from app.utils import settings
+from app.db import init_db
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()  # Инициализация базы данных
+    yield
 
 
 def create_app():
@@ -10,7 +18,8 @@ def create_app():
         """
         API-сервер для приложения "Книгочей", написан для дипломной работы, студентом Понкратовым Н. А.
         """,
-        version="1.0.0"
+        version="1.0.0",
+        lifespan=lifespan
     )
 
     from app.api import users
