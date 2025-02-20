@@ -48,11 +48,13 @@ class File(Base):
         comment="Id пользователя, добавившего файл."
     )
 
-    user: Mapped["User"] = relationship("User", back_populates="files", uselist=False)
+    user: Mapped["User"] = relationship(
+        "User", back_populates="files", uselist=False)
+    user_details = relationship(
+        "UserDetails", back_populates="profile_image")
 
     # TODO: Add relationships to:
     #  - Books (ref: < book_content, ref: < book_title_image)
-    #  - User details (ref: < users_avatar)
 
     __table_args__ = (
         UniqueConstraint('file_key', name='uq_file_key'),

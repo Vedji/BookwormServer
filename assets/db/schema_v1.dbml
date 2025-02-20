@@ -108,49 +108,60 @@ Ref: files.added_user >  users.user_id [Note: "Пользователь може
 
 
 // START user group
-Table users [Note: "Таблица пользователей."]{
-  user_id integer [
-    increment, not null,
-    Note: "Индификатор пользователя в системе."
-  ]
+Table users {
+  user_id integer [increment, not null, Note: "Идентификатор пользователя в системе."]
   username varchar(128) [unique, not null, Note: "Никнейм пользователя."]
-  role roles [
-    default: "user",
-    note: "Роль авторизированного пользователя. От просто авторизированного, до администратора."
-  ]
-  created_at timestamp [Note: "Время регистрации пользователя."]
+  role roles [not null, default: 1, Note: "ID роли пользователя."]
+  created_at timestamp [not null, default: `now()`, Note: "Время регистрации пользователя."]
+  updated_at timestamp [not null, default: `now()`, Note: "Время последнего обновления профиля."]
 
   Indexes {
     (user_id) [pk]
+    (username)
   }
 }
 
-Table user_details [Note: "Таблица дополнительной информации о пользователе."]{
-  user_id integer [not null, Note: "Индификатор пользователя."]
-  description text [null, Note: "Описание профиля у пользователя."]
-  user_title_image_id int [note: "ID файла изображения профиля."]
+Table user_details {
+  user_id integer [not null, Note: "Идентификатор пользователя."]
+  description text [null, Note: "Описание профиля пользователя."]
+  profile_image_id integer [null, Note: "URL изображения профиля."]
 
-  indexes {
+  Indexes {
     (user_id) [pk]
   }
 }
 Ref: user_details.user_id - users.user_id [Note: "У каждого пользователя может быть только одна запись об описании профиля."]
-Ref: user_details.user_title_image_id - files.file_id [Note: "Указывает на запись в таблице файлов, которая соответствует аватарки пользователя."]
+Ref: user_details.profile_image_id - files.file_id [Note: "Указывает на запись в таблице файлов, которая соответствует аватарки пользователя."]
 
 
-Table user_credentials [Note: "Таблица информации для авторизации пользователя."]{
-  user_id integer [not null, Note: "Инжификатор пользователя в БД."]
-  email varchar(256) [not null, Note: "Почта пользователя."]
+Table user_credentials {
+  user_id integer [not null, Note: "Идентификатор пользователя в БД."]
+  email varchar(256) [unique, not null, Note: "Почта пользователя."]
   password_hash varchar(256) [not null, Note: "Зашифрованный пароль пользователя."]
-  password_encryption password_encryption_type [not null, default: "none", Note: "Тип шифрования пароля."]
+  password_encryption ENUM("none", "bcrypt", "argon2", "scrypt") [not null, default: "none", Note: "Тип шифрования пароля."]
+  password_updated_at timestamp [not null, default: `now()`, Note: "Когда пароль был обновлен в последний раз."]
 
   Indexes {
     (user_id) [pk]
-    (email) [unique]
+    (email)
   }
 }
 Ref: user_credentials.user_id - users.user_id [Note: "Для одного пользователя, может существоватьь только одна запись об его аунтификационных данных."]
 
+
+Table user_login_attempts [Note: "Логи попыток вход пользователей."] {
+  attempt_id integer [increment, not null, Note: "Идентификатор попытки входа."]
+  user_id integer [not null, Note: "Идентификатор пользователя."]
+  attempt_at timestamp [not null, default: `now()`, Note: "Время попытки входа."]
+  success boolean [not null, Note: "Успешность попытки входа."]
+  ip_address varchar(45) [not null, Note: "IP-адрес, с которого совершена попытка."]
+
+  Indexes {
+    (attempt_id) [pk]
+    (user_id)
+  }
+}
+Ref: user_login_attempts.user_id > users.user_id [delete: cascade, Note: "Связь попытки входа с пользователем."]
 
   // START Bookmarks group
   Table user_bookmarks {

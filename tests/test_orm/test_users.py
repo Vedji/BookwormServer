@@ -3,14 +3,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 # import app modules
-from app.models.users import User, UserCredentials
+from app.models.users import User, UserCredentials, UserDetails
 from app import schemas
 
 # import test environment
 from . import (init_sqlite_db_local_case,  get_db_local_case)
+import tests.test_orm.test_files
 
 
 class TestUser:
+    """
+    Тестирование ORM-моделей из модуля app.models.users
+
+    Тестируется следующие ORM-классы из этого модуля:
+        - User
+        - UserCredentials
+        - UserDetails
+    """
 
     CREATE_USER_TESTS = [
         (
@@ -32,6 +41,43 @@ class TestUser:
     ]
 
     @staticmethod
+    async def create_user_details(db: AsyncSession, **kwargs) -> UserDetails:
+        """
+        Создает и проверяет запись о детальной информации пользователя.
+        Обязательно соответствие kwargs полям класса UserDetails
+
+        :param db: Сессия базы данных.
+        :param kwargs: Поля класса UserDetails для заполнения.
+        """
+        user_details = UserDetails(**kwargs)
+        db.add(user_details)
+        await db.commit()
+
+        for key, value in kwargs.items():
+            assert getattr(user_details, key) == value,\
+                f"In models.UserDetails {key} assert -> ' {getattr(user_details, key)} != {value}'"
+
+        return user_details
+
+    @staticmethod
+    async def create_user_credentials(db: AsyncSession, **kwargs) -> UserCredentials:
+        """
+        Создает и проверяет запись о данных для аутентификации пользователя.
+        Обязательно соответствие kwargs полям класса UserCredentials
+
+        :param db: Сессия базы данных.
+        :param kwargs: Поля класса UserCredentials для заполнения.
+        """
+        user_credentials = UserCredentials(**kwargs)
+        db.add(user_credentials)
+        await db.commit()
+
+        for key, value in kwargs.items():
+            assert getattr(user_credentials, key) == value, f"In models.UserCredentials {key} assert -> ' {getattr(user_credentials, key)} != {value}'"
+
+        return user_credentials
+
+    @staticmethod
     async def create_user(db: AsyncSession, **kwargs) -> User:
         """
         Создает и проверяет запись о пользователе. Обязательно соответствие kwargs полям класса User
@@ -48,24 +94,71 @@ class TestUser:
 
         return user
 
-    @staticmethod
-    async def create_user_credentials(db: AsyncSession, user: User, **kwargs) -> UserCredentials:
-        """
-        Создает и проверяет запись о данных для аутентификации пользователя.
-        Обязательно соответствие kwargs полям класса UserCredentials
+    @pytest.mark.asyncio
+    async def test_user_details(self, get_db_local_case: AsyncSession):
+        """ Проверяет ORM класс для таблицы `user_details` """
 
-        :param db: Сессия базы данных.
-        :param user: Пользователь к которому эти записи относятся.
-        :param kwargs: Поля класса UserCredentials для заполнения.
-        """
-        user_credentials = UserCredentials(user_id=user.user_id, **kwargs)
-        db.add(user_credentials)
-        await db.commit()
+        username = "test_user_unique"
+        role = schemas.constants.UserRoleDB.USER
 
-        for key, value in kwargs.items():
-            assert getattr(user_credentials, key) == value, f"In models.UserCredentials {key} assert -> ' {getattr(user_credentials, key)} != {value}'"
+        # Создание нового пользователя и его проверка
+        user = await self.create_user(get_db_local_case, username=username, role=role)
 
-        return user_credentials
+        # Создание записи в таблице user_details
+        user_details = await self.create_user_details(
+            get_db_local_case,
+            user_id=user.user_id,
+            description=None,
+            profile_image_id=None
+        )
+
+        # Проверяем соответствие внешних ключей
+        await get_db_local_case.refresh(user)
+        assert user.details == user_details
+
+        # Создаем файл и добавляем его, как аватарку пользователя
+        file = await tests.test_orm.test_files.TestFiles.create_file(
+            get_db_local_case,
+            file_key="file_key",
+            mime_type=schemas.constants.AllowedFileFormats.JPEG.value,
+            status=schemas.constants.FileStatus.EXPIRED.value,
+            bucket_name=None,
+            s3_url=None,
+            expires_at=None,
+            added_user=user.user_id
+        )
+        user_details.profile_image = file
+        await get_db_local_case.commit()
+        await get_db_local_case.refresh(user_details)
+        await get_db_local_case.refresh(file)
+
+        # Проверяем что файл корректно установился
+        assert user_details.profile_image == file
+        assert user_details.profile_image_id == file.file_id
+
+        # Удаляем аватарку пользователя
+        await get_db_local_case.delete(file)
+        await get_db_local_case.commit()
+        await get_db_local_case.refresh(user_details)
+
+        # Проверяем что у пользователя установилось значение null у аватарки пользователя
+        assert user_details.profile_image is None
+        assert user_details.profile_image_id is None
+
+        # Добавление второго пользователя с такими же данными
+        with pytest.raises(IntegrityError) as integrity_error:
+            await self.create_user_details(
+                get_db_local_case,
+                user_id=user.user_id,
+                description=None,
+                profile_image_id=None
+            )
+
+        # Проверка, что SQLAlchemy выдало исключение об уникальности
+        assert "UNIQUE constraint failed" in integrity_error.value.orig.__str__(), \
+            "Проверка, что от БД выброшено исключение об уникальности"
+        assert "user_details.user_id" in integrity_error.value.__str__(),\
+            "Проверка, что от БД выброшено исключение об уникальности"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("username, role, email, password_hash, password_encryption", CREATE_USER_TESTS)
@@ -84,7 +177,7 @@ class TestUser:
         # Добавление к пользователю данных для аутентификации и их проверка
         new_user_credentials = await self.create_user_credentials(
             get_db_local_case,
-            new_user,
+            user_id=new_user.user_id,
             email=email,
             password_hash=password_hash,
             password_encryption=password_encryption.value
@@ -148,7 +241,7 @@ class TestUser:
         # Создаем запись для аутентификации пользователя.
         new_user_credentials = await self.create_user_credentials(
             get_db_local_case,
-            new_user,
+            user_id=new_user.user_id,
             email=email,
             password_hash=password_hash,
             password_encryption=password_encryption
@@ -163,7 +256,7 @@ class TestUser:
         with pytest.raises(IntegrityError) as err:
             await self.create_user_credentials(
                 get_db_local_case,
-                new_user,
+                user_id=new_user.user_id,
                 email=email,
                 password_hash=password_hash,
                 password_encryption=password_encryption

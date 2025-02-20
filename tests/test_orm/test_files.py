@@ -14,6 +14,9 @@ from .test_users import TestUser
 
 
 class TestFiles:
+    """
+    Тестирование ORM-модели файлов, класс:`app.modules.File`.
+    """
 
     USERNAME = "test-username"
     ROLE = schemas.constants.UserRoleDB.ADMINISTRATOR

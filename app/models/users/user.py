@@ -7,7 +7,8 @@ from app.db import Base
 from app.schemas.constants import UserRoleDB
 
 if TYPE_CHECKING:
-    from . import UserCredentials
+    from . import UserCredentials, UserDetails
+    from ..files import File
 
 
 class User(Base):
@@ -32,11 +33,12 @@ class User(Base):
 
     credentials: Mapped["UserCredentials"] = relationship(
         "UserCredentials", back_populates="user", uselist=False, cascade="all, delete-orphan")
-
-    files = relationship('File', back_populates='user', cascade="save-update, merge")
+    files: Mapped["File"] = relationship(
+        'File', back_populates='user', cascade="save-update, merge")
+    details: Mapped["UserDetails"] = relationship(
+        "UserDetails", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     # TODO: Add relationships to:
-    #  - user_details
     #  - support_request
     #  - user_personal_list
     #  - book_rating
