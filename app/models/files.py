@@ -44,7 +44,7 @@ class File(Base):
         comment="Время загрузки файла на сервер."
     )
     added_user: Mapped[int] = mapped_column(
-        ForeignKey("users.user_id"), nullable=False,
+        ForeignKey("users.user_id", ondelete="SET NULL"), nullable=True,
         comment="Id пользователя, добавившего файл."
     )
 

@@ -33,7 +33,7 @@ class User(Base):
     credentials: Mapped["UserCredentials"] = relationship(
         "UserCredentials", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
-    files = relationship('File', back_populates='user')
+    files = relationship('File', back_populates='user', cascade="save-update, merge")
 
     # TODO: Add relationships to:
     #  - user_details

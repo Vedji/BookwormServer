@@ -10,6 +10,7 @@ from app import schemas, settings
 
 # import test environment
 from . import (init_sqlite_db_local_case,  get_db_local_case)
+from .test_users import TestUser
 
 
 class TestFiles:
@@ -35,6 +36,24 @@ class TestFiles:
          schemas.constants.FileStatus.ACTIVE, None, None, None)
     ]
 
+    @staticmethod
+    async def create_file(db: AsyncSession, **kwargs) -> File:
+        """
+        Создает и проверяет запись о файле. Обязательно соответствие kwargs полям класса File
+
+        :param db: Сессия базы данных.
+        :param kwargs: Поля класса File для заполнения.
+        """
+        file = File(**kwargs)
+        db.add(file)
+        await db.commit()
+
+        for key, value in kwargs.items():
+            assert getattr(file, key) == value, f"In models.File {key} assert -> ' {getattr(file, key)} != {value}'"
+
+        return file
+
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize("file_key, mime_type, status, bucket_name, s3_url, expires_at", test_cases_files)
     async def test_create_file(
@@ -47,15 +66,12 @@ class TestFiles:
             expires_at: datetime,
             get_db_local_case: AsyncSession
     ):
-        new_user = User(username=self.USERNAME, role=self.ROLE)
-        get_db_local_case.add(new_user)
-        await get_db_local_case.commit()
+        # Создание пользователя, который добавляет файл
+        new_user = await TestUser.create_user(get_db_local_case, username=self.USERNAME, role=self.ROLE)
 
-        assert new_user.user_id is not None, "Пользователь существует?"
-        assert new_user.username == self.USERNAME, "Соответствует ли никнейм?"
-        assert new_user.role == self.ROLE, "Соответствует ли роль?"
-
-        new_file = File(
+        # Создание записи о файле в БД
+        new_file = await self.create_file(
+            get_db_local_case,
             file_key=file_key,
             mime_type=mime_type.value,
             status=status.value,
@@ -64,11 +80,9 @@ class TestFiles:
             expires_at=expires_at,
             added_user=new_user.user_id
         )
-        get_db_local_case.add(new_file)
-        await get_db_local_case.commit()
 
+        # Проверка существования и соответствия записи о файле с ожидаемыми значениями
         file_from_db = await get_db_local_case.get(File, new_file.file_id)
-
         assert file_from_db.file_key == file_key
         assert file_from_db.mime_type == mime_type.value
         assert file_from_db.status == status.value
@@ -77,6 +91,18 @@ class TestFiles:
         assert file_from_db.expires_at == expires_at
         assert file_from_db.added_user == new_user.user_id
         assert file_from_db.user == new_user
+
+        # Удаление пользователя
+        await get_db_local_case.delete(new_user)
+        await get_db_local_case.commit()
+        await get_db_local_case.refresh(file_from_db)
+        new_user = await get_db_local_case.get(User, new_user.user_id)
+
+        # Проверка, что пользователь удален и файл остался
+        assert new_user is None
+        assert file_from_db.user is None
+        assert file_from_db.file_key == file_key
+
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("file_key, mime_type, status, bucket_name, s3_url, expires_at", test_cases_files)
@@ -90,15 +116,12 @@ class TestFiles:
             expires_at: datetime,
             get_db_local_case: AsyncSession
     ):
-        new_user = User(username=self.USERNAME, role=self.ROLE)
-        get_db_local_case.add(new_user)
-        await get_db_local_case.commit()
+        # Создание пользователя, который добавляет файл.
+        new_user = await TestUser.create_user(get_db_local_case, username=self.USERNAME, role=self.ROLE)
 
-        assert new_user.user_id is not None, "Пользователь существует?"
-        assert new_user.username == self.USERNAME, "Соответствует ли никнейм?"
-        assert new_user.role == self.ROLE, "Соответствует ли роль?"
-
-        new_file = File(
+        # Создание новой записи о файле в БД.
+        new_file = await self.create_file(
+            get_db_local_case,
             file_key=file_key,
             mime_type=mime_type.value,
             status=status.value,
@@ -107,25 +130,14 @@ class TestFiles:
             expires_at=expires_at,
             added_user=new_user.user_id
         )
-        get_db_local_case.add(new_file)
+
+        # Удаление файла
+        await get_db_local_case.delete(new_file)
         await get_db_local_case.commit()
 
-        file_from_db = await get_db_local_case.get(File, new_file.file_id)
-
-        assert file_from_db.file_key == file_key
-        assert file_from_db.mime_type == mime_type.value
-        assert file_from_db.status == status.value
-        assert file_from_db.bucket_name == bucket_name
-        assert file_from_db.s3_url == s3_url
-        assert file_from_db.expires_at == expires_at
-        assert file_from_db.added_user == new_user.user_id
-        assert file_from_db.user == new_user
-
-        await get_db_local_case.delete(file_from_db)
-        await get_db_local_case.commit()
-
+        # Проверка удаления файла
         deleted = await get_db_local_case.get(File, new_file.file_id)
-        assert deleted is None, "Проверяем, удалился ли пользователь?"
+        assert deleted is None, "Проверяем, удалился ли файл?"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("file_key, mime_type, status, bucket_name, s3_url, expires_at", test_cases_files)
@@ -139,15 +151,12 @@ class TestFiles:
             expires_at: datetime,
             get_db_local_case: AsyncSession
     ):
-        new_user = User(username=self.USERNAME, role=self.ROLE)
-        get_db_local_case.add(new_user)
-        await get_db_local_case.commit()
+        # Создание пользователя, который добавляет файл.
+        new_user = await TestUser.create_user(get_db_local_case, username=self.USERNAME, role=self.ROLE)
 
-        assert new_user.user_id is not None, "Пользователь существует?"
-        assert new_user.username == self.USERNAME, "Соответствует ли никнейм?"
-        assert new_user.role == self.ROLE, "Соответствует ли роль?"
-
-        new_file = File(
+        # Создание новой записи о файле в БД.
+        new_file = await self.create_file(
+            get_db_local_case,
             file_key=file_key,
             mime_type=mime_type.value,
             status=status.value,
@@ -156,25 +165,14 @@ class TestFiles:
             expires_at=expires_at,
             added_user=new_user.user_id
         )
-        get_db_local_case.add(new_file)
+
+        # Мягкое удаление файла (Помечаем его в БД, как удаленный)
+        new_file.status = schemas.constants.FileStatus.DELETED.value
         await get_db_local_case.commit()
+        await  get_db_local_case.refresh(new_file)
 
-        file_from_db = await get_db_local_case.get(File, new_file.file_id)
-
-        assert file_from_db.file_key == file_key
-        assert file_from_db.mime_type == mime_type.value
-        assert file_from_db.status == status.value
-        assert file_from_db.bucket_name == bucket_name
-        assert file_from_db.s3_url == s3_url
-        assert file_from_db.expires_at == expires_at
-        assert file_from_db.added_user == new_user.user_id
-        assert file_from_db.user == new_user
-
-        file_from_db.status = schemas.constants.FileStatus.DELETED.value
-        await get_db_local_case.commit()
-        await  get_db_local_case.refresh(file_from_db)
-
+        # Проверяем, что у файла в БД изменился статус на удаленный
         deleted = await get_db_local_case.get(File, new_file.file_id)
-        assert deleted.status == schemas.constants.FileStatus.DELETED.value, "Проверяем, удалился ли пользователь?"
+        assert deleted.status == schemas.constants.FileStatus.DELETED.value, "Проверяем, удалился ли файл?"
 
 
