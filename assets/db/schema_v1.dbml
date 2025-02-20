@@ -16,36 +16,40 @@ Enum roles {
 }
 
 Enum request_status{
-  "pending"
-  "approved"
-  "rejected"
+  "pending" [Note: "Тикет ожидает рассмотрения"]
+  "approved" [Note: "Тикет рассмотрен и дан, положительный ответ"]
+  "rejected" [Note: "Тикет рассмотрен и дан отрицательынй ответ"]
 }
 
 Enum file_status{
-  "active"
-  "expired"
-  "deleted"
+  "active" [Note: "File is active in s3, his can get file by s3 url"]
+  "expired" [Note: "File is expired in s3, his can't get file by s3 url"]
+  "deleted" [Note: "File is safe deleted, his can't get from url"]
+  "local" [Note: "File store in local server."]
 }
 
 Enum personal_list_status{
-  "default"
-  "created"
+  "default" [Note: "Personal list is to default(Her can't edit, deleted or added to user)."]
+  "created" [Note: "Personal list is to added user(Her can edit, deleted or added to user)."]
 }
 
 Enum allowed_file_formats{
-  "application/x-fictionbook+xml"     // FB2
-  "application/epub+zip"              // EPUB
-  "application/pdf"                   // PDF
-  "text/markdown"                     // Markdown
-  "image/png"                         // PNG
-  "image/jpeg"                        // JPEG
-  "application/zip"                   // ZIP
+  "application/x-fictionbook+xml" [note: "FB2 file format"]
+  "application/epub+zip" [note: "EPUB file format"]
+  "application/pdf" [note: "PDF file format"]
+  "text/markdown" [note: "Markdown file format"]
+  "image/png" [note: "PNG file format"]
+  "image/jpeg" [note: "JPEG file format"]
+  "image/gif" [note: "GIF file format"]
+  "application/zip" [note: "ZIP file format"]
+  "text/plain" [note: "TXT file format"]
+  "application/octet-stream" [note: "Unknown file format"]
 }
 
 Enum allowed_book_file_formats{
-  "application/x-fictionbook+xml"     // FB2
-  "application/epub+zip"              // EPUB
-  "text/markdown"                     // Markdown
+  "application/x-fictionbook+xml" [note: "FB2 file format"]
+  "application/epub+zip" [note: "EPUB file format"]
+  "text/markdown" [note: "Markdown file format"]
 }
 
 // End default enums
@@ -58,18 +62,31 @@ Table languages {
 }
 
 
-Table files{
-  file_id integer [pk, increment, not null]
-  added_user integer [ref: > users.user_id]
-  file_name varchar(255) [not null]
-  s3_key varchar(500) [not null, unique]
-  bucket_name varchar(255) [not null]
-  file_url varchar(1000) [null]
-  mime_type varchar(100) [null]
-  uploaded_at timestamp [default: `now()`]
-  expires_at timestamp [null]
-  status file_status [default: "active"]
+Table files [Note: "Хранит информацию о файлах хранящихся на сервере."]{
+  file_id integer [pk, increment, not null, Note: "Индификатор файла с БД."]
+
+  file_key varchar(255) [not null, unique, Note: "Ключ файла в формате S3 (`{file_path}/{file_name}`)."]
+  mime_type allowed_file_formats [
+    not null,
+    default: "application/octet-stream",
+    Note: "Mime-тип файла."
+  ]
+
+  status file_status [
+    null,
+    default: "active",
+    Note: "Статуст файла (Можно получить по S3 ссылке, храниться в локальном хранилище и т.п.)"
+  ]
+  bucket_name varchar(64) [null, Note: "Имя бакета S3."]
+  s3_url varchar(512) [null, Note: "Прямая ссылка на файл в S3."]
+  expires_at timestamp [null, Note: "Время окончания действия ссылки."]
+
+  uploaded_at timestamp [not null, default: `now()`, Note: "Время загрузки файла на сервер."]
+  added_user integer [not null, Note: "Id пользователя, добавившего файл."]
 }
+
+Ref: files.added_user > users.user_id
+
 
 
 // START user group
