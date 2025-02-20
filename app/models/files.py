@@ -23,7 +23,7 @@ class File(Base):
     expires_at = Column(TIMESTAMP, nullable=True)
 
     uploaded_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-    added_user = Column(Integer, ForeignKey('users.user_id'))
+    added_user = Column(Integer, ForeignKey('users.user_id'), nullable=False)
 
     user = relationship('User', back_populates='files')
 

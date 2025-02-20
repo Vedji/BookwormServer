@@ -11,3 +11,4 @@ class AllowedFileFormats(str, Enum):
     GIF = "image/gif"
     ZIP = "application/zip"
     TXT = "text/plain"
+    INCORRECT_FILE_FORMAT = "application/octet-stream"
