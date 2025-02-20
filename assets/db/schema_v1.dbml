@@ -1,6 +1,13 @@
 // Use DBML to define your database structure
 // Docs: https://dbml.dbdiagram.io/docs
 
+Project{
+  name: "Bookworm server"
+  version: "1.4"
+  database_type: "MySQL"
+  Note: "База данных для серверной части диплома на тему 'Мобильное приложение 'Книгочей' с функциями персонализации'"
+}
+
 // Start default enums
 Enum language_codes {
   "none"
@@ -52,18 +59,27 @@ Enum allowed_book_file_formats{
   "text/markdown" [note: "Markdown file format"]
 }
 
+Enum password_encryption_type{
+  "none" [Note: "Шифрование отсутствует."]
+  "bcrypt" [Note: "Шифрование Bcrypt."]
+  "sha256" [Note: "Шифрование SHA-256"]
+}
 // End default enums
 
 
-Table languages {
-  language_id integer [pk, increment]
+Table languages [Note: "Таблица хранит языковые коды и их описание."]{
+  language_id integer [increment, not null, Note: "Индификатор языка в БД."]
   language_code language_codes [not null, unique, note: "Языковой код ('en', 'ru' и т.п.)"]
   language_name varchar(50) [not null, note: 'Название языка']
+
+  Indexes {
+    (language_id) [pk]
+  }
 }
 
 
 Table files [Note: "Хранит информацию о файлах хранящихся на сервере."]{
-  file_id integer [pk, increment, not null, Note: "Индификатор файла с БД."]
+  file_id integer [increment, not null, Note: "Индификатор файла с БД."]
 
   file_key varchar(255) [not null, unique, Note: "Ключ файла в формате S3 (`{file_path}/{file_name}`)."]
   mime_type allowed_file_formats [
@@ -83,35 +99,58 @@ Table files [Note: "Хранит информацию о файлах храня
 
   uploaded_at timestamp [not null, default: `now()`, Note: "Время загрузки файла на сервер."]
   added_user integer [not null, Note: "Id пользователя, добавившего файл."]
+
+  Indexes {
+    (file_id) [ pk ]
+  }
 }
-
-Ref: files.added_user > users.user_id
-
+Ref: files.added_user >  users.user_id [Note: "Пользователь может загрузить множество записей."]
 
 
 // START user group
-Table users{
-  user_id integer [pk, increment, not null]
-  username varchar(128) [unique]
+Table users [Note: "Таблица пользователей."]{
+  user_id integer [
+    increment, not null,
+    Note: "Индификатор пользователя в системе."
+  ]
+  username varchar(128) [unique, not null, Note: "Никнейм пользователя."]
   role roles [
     default: "user",
-     note: "Тип пользователя от просто авторизированного, до администратора"
-      ]
-  created_at timestamp
+    note: "Роль авторизированного пользователя. От просто авторизированного, до администратора."
+  ]
+  created_at timestamp [Note: "Время регистрации пользователя."]
+
+  Indexes {
+    (user_id) [pk]
+  }
 }
 
-Table user_details{
-  user_id integer [Ref: - users.user_id]
-  description text
-  user_title_image_id int [ref: - files.file_id, note: "ID файла изображения аватарки"]
-}
+Table user_details [Note: "Таблица дополнительной информации о пользователе."]{
+  user_id integer [not null, Note: "Индификатор пользователя."]
+  description text [null, Note: "Описание профиля у пользователя."]
+  user_title_image_id int [note: "ID файла изображения профиля."]
 
-Table user_auth{
-  user_id integer [Ref: - users.user_id]
-  email varchar(128) [unique]
-  password varchar(256)
-  password_store_type varchar(32)
+  indexes {
+    (user_id) [pk]
+  }
 }
+Ref: user_details.user_id - users.user_id [Note: "У каждого пользователя может быть только одна запись об описании профиля."]
+Ref: user_details.user_title_image_id - files.file_id [Note: "Указывает на запись в таблице файлов, которая соответствует аватарки пользователя."]
+
+
+Table user_credentials [Note: "Таблица информации для авторизации пользователя."]{
+  user_id integer [not null, Note: "Инжификатор пользователя в БД."]
+  email varchar(256) [not null, Note: "Почта пользователя."]
+  password_hash varchar(256) [not null, Note: "Зашифрованный пароль пользователя."]
+  password_encryption password_encryption_type [not null, default: "none", Note: "Тип шифрования пароля."]
+
+  Indexes {
+    (user_id) [pk]
+    (email) [unique]
+  }
+}
+Ref: user_credentials.user_id - users.user_id [Note: "Для одного пользователя, может существоватьь только одна запись об его аунтификационных данных."]
+
 
   // START Bookmarks group
   Table user_bookmarks {
@@ -266,33 +305,57 @@ Table book_publishers{
 
 // START books group
 // START book genres group
-Table genres{
-  genre_id integer [pk, not null, increment]
-}
+Table genres [Note: "Таблица хранит список доступных жанров."]{
+  genre_id integer [increment, not null, Note: "Индификатор жанра."]
 
-Table book_genres{
-  book_id integer [not null, ref: > books.book_id]
-  genre_id integer [not null, ref: > genres.genre_id]
-}
-
-Table genres_translations{
-  genre_id integer [not null, ref: > genres.genre_id]
-  genre_name varchar(255) [not null]
-  language_id integer [not null, ref: > languages.language_id, note: 'Отвечает за локализацию']
-
-  indexes {
-    (genre_id, language_id) [unique]
+  Indexes {
+    (genre_id) [pk]
   }
 }
+
+
+Table book_genres [Note: "Таблица ассоциаций между книгами и жанрами."]{
+  book_id integer [not null, Note: "Индификатор книги."]
+  genre_id integer [not null, Note: "Индификатор жанра."]
+
+  Indexes {
+    (book_id, genre_id) [pk]
+  }
+}
+Ref: book_genres.book_id > books.book_id [Note: "Внешний ключ на индификатор книги."]
+Ref: book_genres.genre_id > genres.genre_id [Note: "Внешний ключ на индификатор жанра."]
+
+
+Table genres_translations [Note: "Таблица хранит описание жанров."]{
+  genre_id integer [not null, Note: "Индификатор жанра. "]
+  language_id integer [not null, note: 'Индификатор языка. ']
+  genre_name varchar(255) [not null, Note: "Название жанра. "]
+
+  indexes {
+    (genre_id, language_id) [unique, pk]
+  }
+}
+Ref: genres_translations.genre_id > genres.genre_id [ Note: "Внешний ключ для ассоциации с жанрами." ]
+Ref: genres_translations.language_id > languages.language_id [ Note: "Внешний ключ отражающий код языка." ]
 // END book genres group
 
-Table books{
-  book_id integer [pk]
-  added_user integer [ref: > users.user_id]
-  book_publication_date varchar(64) [null]
-  book_file_type allowed_book_file_formats [not null]
-  book_content integer [ref: - files.file_id, not null]
+Table books [Note: "Таблица описывающая произведения."]{
+  book_id integer [increment, not null, Note: "Индификатор книги."]
+
+  book_publication_date date [null, Note: "Дата публикации книги."]
+
+  book_content integer [not null, Note: "Индификатор файла, указывающий на файл, в котором содержиться содержимое книги."]
+  book_file_type allowed_book_file_formats [not null, Note: "В каком формате загружено содержимое книги."]
+
+  added_user integer [ Note: "Индификатор пользователя, который добавил книгу."]
+
+  Indexes {
+    (book_id) [pk]
+  }
 }
+Ref: books.added_user > users.user_id [ Note: "Внешний ключ указывающий на пользователя, добавившего произведение." ]
+Ref: books.book_content - files.file_id [ Note: "Внешний ключ указывающий на файл книги." ]
+
 
 Table book_translations {
   // books_localization_id [pk, not null, increment]
