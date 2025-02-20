@@ -4,7 +4,8 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
 
 # import app modules
-from app.models import User, File
+from app.models import File
+from app.models.users import User
 from app import schemas, settings
 
 # import test environment

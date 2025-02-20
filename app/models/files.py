@@ -1,31 +1,54 @@
-from sqlalchemy import (
-    Column, Integer, String, Enum, ForeignKey, TIMESTAMP, UniqueConstraint,
-    func
-)
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy import (String, ForeignKey, UniqueConstraint)
+from sqlalchemy.orm import relationship, mapped_column, Mapped
+from typing import TYPE_CHECKING
+import datetime
 
 from app.db import Base
 from app.schemas.constants import AllowedFileFormats, FileStatus
 
+if TYPE_CHECKING:
+    from .users import User
+
 
 class File(Base):
-    __tablename__ = 'files'
+    __tablename__ = "files"
 
-    file_id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    file_id: Mapped[int] = mapped_column(
+        primary_key=True, autoincrement=True, nullable=False,
+        comment="Идентификатор файла в БД."
+    )
 
-    file_key = Column(String(255), nullable=False, unique=True)
-    mime_type = Column(Enum(AllowedFileFormats), nullable=False, default="application/octet-stream")
+    file_key: Mapped[str] = mapped_column(
+        String(255), unique=True, nullable=False,
+        comment="Ключ файла в формате S3 (`{file_path}/{file_name}`)."
+    )
+    mime_type: Mapped[AllowedFileFormats] = mapped_column(
+        default=AllowedFileFormats.INCORRECT_FILE_FORMAT, nullable=False,
+        comment="Mime-тип файла."
+    )
 
-    status = Column(Enum(FileStatus), nullable=False, default=FileStatus.EXPIRED)
-    bucket_name = Column(String(64), nullable=True)
-    s3_url = Column(String(512), nullable=True)
-    expires_at = Column(TIMESTAMP, nullable=True)
+    status: Mapped[FileStatus] = mapped_column(
+        default=FileStatus.ACTIVE, nullable=True,
+        comment="Статус файла (Можно получить по S3 ссылке, хранится в локальном хранилище и т.п.)"
+    )
+    bucket_name: Mapped[str] = mapped_column(
+        String(64), nullable=True, comment="Имя бакета S3.")
+    s3_url: Mapped[str] = mapped_column(
+        String(512), nullable=True, comment="Прямая ссылка на файл в S3.")
+    expires_at: Mapped[datetime.datetime] = mapped_column(
+        nullable=True,
+        comment="Время окончания действия ссылки."
+    )
+    uploaded_at: Mapped[datetime.datetime] = mapped_column(
+        default=datetime.datetime.now(), nullable=False,
+        comment="Время загрузки файла на сервер."
+    )
+    added_user: Mapped[int] = mapped_column(
+        ForeignKey("users.user_id"), nullable=False,
+        comment="Id пользователя, добавившего файл."
+    )
 
-    uploaded_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
-    added_user = Column(Integer, ForeignKey('users.user_id'), nullable=False)
-
-    user = relationship('User', back_populates='files')
+    user: Mapped["User"] = relationship("User", back_populates="files", uselist=False)
 
     # TODO: Add relationships to:
     #  - Books (ref: < book_content, ref: < book_title_image)

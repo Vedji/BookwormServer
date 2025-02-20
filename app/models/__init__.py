@@ -1,2 +1,2 @@
-from .users import User
+from . import users
 from .files import File
