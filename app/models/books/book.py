@@ -10,7 +10,7 @@ from app.schemas.constants import PasswordEncryptionTypes, AllowedBookFileFormat
 if TYPE_CHECKING:
     from ..users import User
     from .. import File
-    from . import BookPreviewImage
+    from . import BookPreviewImage, BookTranslation
 
 
 class Book(Base):
@@ -42,6 +42,7 @@ class Book(Base):
     user: Mapped["User"] = relationship(lazy="selectin", back_populates="added_books")
     content: Mapped["File"] = relationship(lazy="selectin", back_populates="books", uselist=False)
     preview_images: Mapped[List["BookPreviewImage"]] = relationship(lazy="selectin", back_populates="for_book")
+    book_translations: Mapped[List["BookTranslation"]] = relationship(lazy="selectin", back_populates="book")
 
 
     def __repr__(self):

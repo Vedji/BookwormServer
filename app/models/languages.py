@@ -6,22 +6,28 @@ import datetime
 from app.db import Base
 from app.schemas.constants import AllowedFileFormats, FileStatus, LanguageCodes
 
+if TYPE_CHECKING:
+    from .books import BookTranslation
+
 
 class Language(Base):
     __tablename__ = "languages"
 
-    language_id: Mapped[int] = mapped_column(
-        primary_key=True, autoincrement=True, nullable=False,
-        comment="Идентификатор языка в БД.")
     language_code: Mapped["LanguageCodes"] = mapped_column(
-        nullable=False, unique=True,
-        comment="Языковой код ('en', 'ru' и т.п.)")
+        String(6), primary_key=True, nullable=False, unique=True,
+        comment="Языковой код ('en', 'ru' и т.п.), также является идентификатором языка в БД.")
     language_name: Mapped[str] = mapped_column(
         String(50), nullable=False, comment="Название языка"
     )
+
+    book_translations: Mapped[List["BookTranslation"]] = relationship(lazy="selectin", back_populates="language")
 
     # TODO: Add relationships for:
     #   - genres_translations
     #   - book_translations
     #   - book_comments
 
+    def __repr__(self):
+        return (f"<Language("
+                f" language_code = '{self.language_code}',"
+                f" language_name = '{self.language_name}')>")

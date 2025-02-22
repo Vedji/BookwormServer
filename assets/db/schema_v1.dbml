@@ -64,16 +64,26 @@ Enum password_encryption_type{
   "bcrypt" [Note: "Шифрование Bcrypt."]
   "sha256" [Note: "Шифрование SHA-256"]
 }
+
+Enum support_request_types{
+  "request_type_none"
+  "request_about_error"
+  "request_to_get_author_role"
+  "request_to_get_publisher_role"
+  "request_to_get_administrator_role"
+}
+
 // End default enums
 
 
 Table languages [Note: "Таблица хранит языковые коды и их описание."]{
-  language_id integer [increment, not null, Note: "Индификатор языка в БД."]
-  language_code language_codes [not null, unique, note: "Языковой код ('en', 'ru' и т.п.)"]
-  language_name varchar(50) [not null, note: 'Название языка']
+  language_code language_codes [
+    not null, unique,
+    Note: "Языковой код ('en', 'ru' и т.п.), также является идентификатором языка в БД."]
+  language_name varchar(50) [not null, Note: 'Название языка']
 
   Indexes {
-    (language_id) [pk]
+    (language_code) [pk]
   }
 }
 
@@ -150,6 +160,7 @@ Ref: user_credentials.user_id - users.user_id [Note: "Для одного пол
 
 
 Table user_login_attempts [Note: "Логи попыток вход пользователей."] {
+  // Объеденить логи в одну таблицу с подтаблицами для разных категорий.
   attempt_id integer [increment, not null, Note: "Идентификатор попытки входа."]
   user_id integer [not null, Note: "Идентификатор пользователя."]
   attempt_at timestamp [not null, default: `now()`, Note: "Время попытки входа."]
@@ -207,8 +218,9 @@ Table user_personal_lists [
      + Любимое (Likes)
      '''
   ] {
-    user_id integer [ref: > users.user_id]
     personal_list_id integer [pk, not null, increment]
+    user_id integer [ref: > users.user_id]
+
     list_name varchar(32) [not null]
     list_type personal_list_status [
       not null,
@@ -223,43 +235,98 @@ Table user_personal_lists [
 Table user_personal_lists_items{
   personal_list_id integer [ref: > user_personal_lists.personal_list_id]
   book_id integer [ref: > books.book_id]
+
+  Indexes {
+    (personal_list_id, book_id) [pk, unique]
+  }
+
 }
 
 // END user group
 
 
 // START requests group
-Table author_requests [
-  note: '''Таблица тикетов для администратора на становления автором контента'''
-]{
-  author_requests_id integer [pk, increment, not null]
-  user_id integer [ref: > users.user_id, not null]
-  status request_status [default: 'pending']
-  reviewed_at timestamp [null, note: 'Время рассмотрения заявки']
-  reviewed_user_id integer [ref: > users.user_id, not null]
-}
-
-Table publisher_requests [
-  note: '''Таблица тикетов для администратора на становления издателем контента'''
-]{
-  publisher_requests_id integer [pk, increment, not null]
-  user_id integer [ref: > users.user_id, not null]
-  status request_status [default: 'pending']
-  reviewed_at timestamp [null, note: 'Время рассмотрения заявки']
-  reviewed_user_id integer [ref: > users.user_id, not null]
-}
 
 Table support_requests [
-  note:  '''Таблица тикетов для администратора содержащия сообщения об ошибках и т.п.'''
-]{
-  support_requests_id integer [pk, increment, not null]
-  user_id integer [ref: > users.user_id, not null]
-  status request_status [default: 'pending']
-  reviewed_at timestamp [null, note: 'Время рассмотрения заявки']
-  reviewed_user_id integer [ref: > users.user_id, not null]
-  subject varchar(255) [not null, note: 'Тема запроса']
-  message text [not null, note: 'Сообщение запроса']
+  Note: "Таблица общих заявок пользователей на поддержку."
+] {
+  ticked_id integer [
+    increment, not null,
+     Note: "Индификатор заявки в поддержку."]
+
+  support_request_type support_request_types [
+    not null, default: "request_type_none",
+    Note: "Тип запроса в поддержку."]
+
+  status request_status [
+    not null, default: "pending",
+     Note: "Статус запроса к поддержки."]
+  reviewed_at timestamp [
+    null, note: 'Время рассмотрения заявки.']
+
+  subject varchar(255) [      // Move to different table
+    not null, note: 'Тема запроса']
+  message text [              // Move to different table
+    not null, note: 'Сообщение запроса']
+
+  user_id integer [
+    not null,
+    Note: "Индификатор пользователя, который оставил заявку."
+  ]
+  reviewed_user_id integer [
+    not null,
+    Note: "Индификатор пользователя, который рассмотрел заявку."
+  ]
+
+  Indexes {
+    (ticked_id) [pk]
+  }
 }
+Ref: support_requests.user_id > users.user_id [
+  Note: "Внешний ключ на таблицу `users`, для пользователя оставившего заявку."]
+Ref: support_requests.reviewed_user_id > users.user_id [
+  Note: "Внешний ключ на таблицу `users`, для пользователя рассмотревшего заявку."]
+
+
+Table requests_to_get_role_author [
+  Note: "Таблица запросов на получение роли автора контента."
+]{
+  ticked_id integer [not null, Note: "Индификатор заявки в поддержку."]
+
+  first_name varchar(255) [not null, Note: "Имя автора."]
+  last_name varchar (255) [not null, Note: "Фамилия автора."]
+  contact_email varchar(255) [not null, Note: "Почтовый адрес автора."]
+  website varchar(1024) [null, Note: "Ссылка на персональный сайт автора (Если есть)."]
+  birthday timestamp [not null, Note: "Дата рождения пользователя."]
+  nationaly varchar(255) [not null, Note: "национальность автора."]
+  description text [not null, Note: "Пара слов о авторе."]
+
+  Indexes {
+    (ticked_id) [pk]
+  }
+}
+Ref: requests_to_get_role_author.ticked_id - support_requests.ticked_id [
+  Note: "Связь 1-1"]
+
+
+Table requests_to_get_role_publisher [
+  Note: "Таблица запросов на получение роли издателя контента."
+]{
+  ticked_id integer [not null, Note: "Индификатор заявки в поддержку."]
+
+  publisher_name varchar(255) [not null, Note: "Название издателя."]
+  website varchar(1024) [null, Note: "Ссылка на персональный сайт издателя (Если есть)."]
+  contact_email varchar(255) [not null, Note: "Почтовый адрес издателя."]
+  contact_phone varchar(50) [not null, Note: "Телефонный номер для связи с издателем."]
+  founded_year YEAR [not null, Note: "Дата основания издательства."]
+  description text [not null, Note: "Описание издательства."]
+
+  Indexes {
+    (ticked_id) [pk]
+  }
+}
+Ref: requests_to_get_role_publisher.ticked_id - support_requests.ticked_id
+
 // END requests group
 
 
@@ -317,7 +384,7 @@ Table book_publishers{
 // START books group
 // START book genres group
 Table genres [Note: "Таблица хранит список доступных жанров."]{
-  genre_id integer [increment, not null, Note: "Индификатор жанра."]
+  genre_id integer [increment, not null, Note: "Идентификатор жанра."]
 
   Indexes {
     (genre_id) [pk]
@@ -326,39 +393,43 @@ Table genres [Note: "Таблица хранит список доступных
 
 
 Table book_genres [Note: "Таблица ассоциаций между книгами и жанрами."]{
-  book_id integer [not null, Note: "Индификатор книги."]
-  genre_id integer [not null, Note: "Индификатор жанра."]
+  book_id integer [not null, Note: "Идентификатор книги."]
+  genre_id integer [not null, Note: "Идентификатор жанра."]
 
   Indexes {
     (book_id, genre_id) [pk]
   }
 }
-Ref: book_genres.book_id > books.book_id [Note: "Внешний ключ на индификатор книги."]
-Ref: book_genres.genre_id > genres.genre_id [Note: "Внешний ключ на индификатор жанра."]
+Ref: book_genres.book_id > books.book_id [Note: "Внешний ключ на идентификатор книги."]
+Ref: book_genres.genre_id > genres.genre_id [Note: "Внешний ключ на идентификатор жанра."]
 
 
 Table genres_translations [Note: "Таблица хранит описание жанров."]{
-  genre_id integer [not null, Note: "Индификатор жанра. "]
-  language_id integer [not null, note: 'Индификатор языка. ']
+  genre_id integer [not null, Note: "Идентификатор жанра. "]
+  language_code language_codes [not null, note: 'Идентификатор языка. ']
   genre_name varchar(255) [not null, Note: "Название жанра. "]
 
   indexes {
-    (genre_id, language_id) [unique, pk]
+    (genre_id, language_code) [unique, pk]
   }
 }
 Ref: genres_translations.genre_id > genres.genre_id [ Note: "Внешний ключ для ассоциации с жанрами." ]
-Ref: genres_translations.language_id > languages.language_id [ Note: "Внешний ключ отражающий код языка." ]
+Ref: genres_translations.language_code > languages.language_code [ Note: "Внешний ключ отражающий код языка." ]
 // END book genres group
 
-Table books [Note: "Таблица описывающая произведения."]{
-  book_id integer [increment, not null, Note: "Индификатор книги."]
+Table books [Note: "Таблица хранит основную информацию о книгах."]{
+  book_id integer [increment, not null, Note: "Идентификатор книги."]
 
   book_publication_date date [null, Note: "Дата публикации книги."]
 
-  book_content integer [not null, Note: "Индификатор файла, указывающий на файл, в котором содержиться содержимое книги."]
-  book_file_type allowed_book_file_formats [not null, Note: "В каком формате загружено содержимое книги."]
+  book_content integer [null, Note: "Идентификатор файла, указывающий на файл, в котором содержиться содержимое книги."]
+  book_content_type allowed_book_file_formats [not null, Note: "В каком формате загружено содержимое книги."]
 
-  added_user integer [ Note: "Индификатор пользователя, который добавил книгу."]
+  book_isbn varchar(14) [null, Note: "ISBN код книги без разделителей."]
+
+  added_user integer [not null, Note: "Идентификатор пользователя, который добавил книгу."]
+  updated_at timestamp [not null, default: `now()`, Note: "Когда книга была обновлена в последний раз."]
+  created_at timestamp [not null, default: `now()`, Note: "Когда книга была записана в систему."]
 
   Indexes {
     (book_id) [pk]
@@ -367,31 +438,52 @@ Table books [Note: "Таблица описывающая произведени
 Ref: books.added_user > users.user_id [ Note: "Внешний ключ указывающий на пользователя, добавившего произведение." ]
 Ref: books.book_content - files.file_id [ Note: "Внешний ключ указывающий на файл книги." ]
 
+Table book_preview_images{
+  book_id integer [pk, not null, Note: "Идентификатор книги."]
+  file_id integer [not null, Note: "Идентификатор изображения."]
 
-Table book_translations {
-  // books_localization_id [pk, not null, increment]
-  book_id integer [ref: - books.book_id, not null]
-  language_id integer [not null, ref: > languages.language_id, note: 'Отвечает за локализацию']
-  book_description text [null]
-  book_title text [not null]
-
-}
-
-Table book_rating{
-  rating_id integer [pk, not null, increment]
-  user_id integer [not null, ref: - users.user_id]
-  book_id integer [not null, ref: - books.book_id]
-  rating integer [not null, default: 0, note: 'CHECK (rating >= 0 AND rating <= 5)']
+  content_description varchar(128) [null, default: "Описание изображения отсутствует.", Note: "Описание изображения."]
+  created_at timestamp [not null, default: `now()`, Note: "Когда книга была записана в систему."]
 
   Indexes {
-    (user_id, book_id) [unique]
+    (book_id, file_id) [unique]
+  }
+}
+Ref: books.book_id < book_preview_images.book_id [Note: "Указатель на книгу."]
+Ref: files.file_id < book_preview_images.file_id [Note: "Указатель на файл."]
+
+
+Table book_translations [Note: "Таблица хранить локализации названия и описания книги."] {
+  // books_localization_id [pk, not null, increment]
+  book_id integer [ref: > books.book_id, not null, Note: "Идентификатор книги."]
+  language_code language_codes [not null, ref: > languages.language_code, note: 'Идентификатор локализации.']
+
+  book_title varchar(256) [not null, Note: "Название произведения."]
+  book_description text [null, Note: "Локализация описания книги."]
+
+  Indexes {
+    (book_id, language_code) [pk, unique]
+  }
+}
+
+Table book_rating [Note: "Таблица хранить пользовательские оценки для книг."]{
+  user_id integer [not null, ref: - users.user_id, Note: "Индентификатор пользователя."]
+  book_id integer [not null, ref: - books.book_id, Note: "Индентификатор книги."]
+  rating tinyint [
+    not null, default: 0,
+    Note: 'Значение пользовательской оценки, доложно соответствовать уловию: `CHECK (rating >= 0 AND rating <= 5)`.']
+
+  created_at timestamp [not null, default: `now()`, Note: "Когда была поставлена оценка."]
+
+  Indexes {
+    (user_id, book_id) [pk, unique]
   }
 }
 
 Table book_comments{
   comment_id integer [pk, not null, increment]
   book_id integer [ref: > books.book_id]
-  language_id integer [not null, ref: > languages.language_id, note: 'Отвечает за локализацию']
+  language_code language_codes [not null, ref: > languages.language_code, note: 'Отвечает за локализацию']
   message text [not null]
 }
 // END books group

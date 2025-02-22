@@ -17,7 +17,7 @@ class TestLanguages:
 
     @pytest.mark.asyncio
     async def test_languages(self, get_db_local_case: AsyncSession):
-        rus_lang = await get_db_local_case.get(models.Language, 1)
-        eng_lang = await get_db_local_case.get(models.Language, 2)
+        rus_lang = await get_db_local_case.get(models.Language, schemas.constants.LanguageCodes.RU)
+        eng_lang = await get_db_local_case.get(models.Language, schemas.constants.LanguageCodes.EN)
         assert rus_lang.language_code == schemas.constants.LanguageCodes.RU
         assert eng_lang.language_code == schemas.constants.LanguageCodes.EN
