@@ -69,8 +69,22 @@ class TestBook:
         book.content = file
         book.book_content_type = AllowedBookFileFormats.FB2
         await get_db_local_case.commit()
-
-        # Проверяем
         await get_db_local_case.refresh(book)
         assert book.content == file
         assert book.book_content_type == AllowedBookFileFormats.FB2.value
+
+        # Удаляем файл книги и проверяем, что книга осталась
+        await get_db_local_case.delete(file)
+        book.book_content_type = AllowedBookFileFormats.NONE.value
+        await get_db_local_case.commit()
+        await get_db_local_case.refresh(book)
+
+        assert book.content is None
+        assert book.book_content is None
+        assert book.book_content_type == AllowedBookFileFormats.NONE.value
+        # Удаляем книгу и проверяем, что пользователь остался
+        await get_db_local_case.delete(book)
+        await get_db_local_case.commit()
+        await get_db_local_case.refresh(user)
+
+        assert user is not None
