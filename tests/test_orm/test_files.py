@@ -1,16 +1,16 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
 
 # import app modules
 from app.models import File
 from app.models.users import User
-from app import schemas, settings
+from app import schemas
 
 # import test environment
 from . import (init_sqlite_db_local_case,  get_db_local_case)
-from .test_users import TestUser
+from tests.utils.orm import FileCrudORM
+from tests.utils.orm.users import UserCrudORM
 
 
 class TestFiles:
@@ -39,23 +39,6 @@ class TestFiles:
          schemas.constants.FileStatus.ACTIVE, None, None, None)
     ]
 
-    @staticmethod
-    async def create_file(db: AsyncSession, **kwargs) -> File:
-        """
-        Создает и проверяет запись о файле. Обязательно соответствие kwargs полям класса File
-
-        :param db: Сессия базы данных.
-        :param kwargs: Поля класса File для заполнения.
-        """
-        file = File(**kwargs)
-        db.add(file)
-        await db.commit()
-
-        for key, value in kwargs.items():
-            assert getattr(file, key) == value, f"In models.File {key} assert -> ' {getattr(file, key)} != {value}'"
-
-        return file
-
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("file_key, mime_type, status, bucket_name, s3_url, expires_at", test_cases_files)
@@ -70,10 +53,10 @@ class TestFiles:
             get_db_local_case: AsyncSession
     ):
         # Создание пользователя, который добавляет файл
-        new_user = await TestUser.create_user(get_db_local_case, username=self.USERNAME, role=self.ROLE)
+        new_user = await UserCrudORM.create_user(get_db_local_case, username=self.USERNAME, role=self.ROLE)
 
         # Создание записи о файле в БД
-        new_file = await self.create_file(
+        new_file = await FileCrudORM.create_file(
             get_db_local_case,
             file_key=file_key,
             mime_type=mime_type.value,
@@ -120,10 +103,10 @@ class TestFiles:
             get_db_local_case: AsyncSession
     ):
         # Создание пользователя, который добавляет файл.
-        new_user = await TestUser.create_user(get_db_local_case, username=self.USERNAME, role=self.ROLE)
+        new_user = await UserCrudORM.create_user(get_db_local_case, username=self.USERNAME, role=self.ROLE)
 
         # Создание новой записи о файле в БД.
-        new_file = await self.create_file(
+        new_file = await FileCrudORM.create_file(
             get_db_local_case,
             file_key=file_key,
             mime_type=mime_type.value,
@@ -155,10 +138,10 @@ class TestFiles:
             get_db_local_case: AsyncSession
     ):
         # Создание пользователя, который добавляет файл.
-        new_user = await TestUser.create_user(get_db_local_case, username=self.USERNAME, role=self.ROLE)
+        new_user = await UserCrudORM.create_user(get_db_local_case, username=self.USERNAME, role=self.ROLE)
 
         # Создание новой записи о файле в БД.
-        new_file = await self.create_file(
+        new_file = await FileCrudORM.create_file(
             get_db_local_case,
             file_key=file_key,
             mime_type=mime_type.value,

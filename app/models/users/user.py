@@ -8,7 +8,8 @@ from app.schemas.constants import UserRoleDB
 
 if TYPE_CHECKING:
     from . import UserCredentials, UserDetails
-    from ..files import File
+    from .. import File
+    from ..books import Book
 
 
 class User(Base):
@@ -37,6 +38,8 @@ class User(Base):
         'File', back_populates='user', cascade="save-update, merge")
     details: Mapped["UserDetails"] = relationship(
         "UserDetails", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    added_books: Mapped["Book"] = relationship(
+        "Book", back_populates="user", cascade="save-update, merge")
 
     # TODO: Add relationships to:
     #  - support_request

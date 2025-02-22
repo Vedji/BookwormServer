@@ -52,9 +52,8 @@ class File(Base):
         "User", back_populates="files", uselist=False)
     user_details = relationship(
         "UserDetails", back_populates="profile_image")
-
-    # TODO: Add relationships to:
-    #  - Books (ref: < book_content, ref: < book_title_image)
+    books = relationship(
+        "Book", back_populates="content")
 
     __table_args__ = (
         UniqueConstraint('file_key', name='uq_file_key'),
