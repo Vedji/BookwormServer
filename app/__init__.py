@@ -3,6 +3,9 @@ from contextlib import asynccontextmanager
 from app.utils import settings
 from app.db import init_db
 
+# Import modules
+from . import (api, db, models, schemas, services, storage, utils)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

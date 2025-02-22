@@ -17,23 +17,6 @@ from tests.utils.orm.users import UserCrudORM
 
 class TestBook:
 
-    @staticmethod
-    async def create_book(db: AsyncSession, **kwargs) -> Book:
-        """
-        Создает и проверяет запись о книге. Обязательно соответствие kwargs полям класса Book
-
-        :param db: Сессия базы данных.
-        :param kwargs: Поля класса Book для заполнения.
-        """
-        book = Book(**kwargs)
-        db.add(book)
-        await db.commit()
-
-        for key, value in kwargs.items():
-            assert getattr(book, key) == value, f"In models.Book {key} assert -> ' {getattr(book, key)} != {value}'"
-
-        return book
-
     @pytest.mark.asyncio
     async def test_create_book(self, get_db_local_case: AsyncSession):
         username = "test-username"

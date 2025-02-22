@@ -1,13 +1,14 @@
 from sqlalchemy import (String, ForeignKey, UniqueConstraint)
 from sqlalchemy.orm import relationship, mapped_column, Mapped
-from typing import TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 import datetime
 
 from app.db import Base
 from app.schemas.constants import AllowedFileFormats, FileStatus
 
 if TYPE_CHECKING:
-    from .users import User
+    from .users import User, UserDetails
+    from .books import Book, BookPreviewImage
 
 
 class File(Base):
@@ -48,12 +49,11 @@ class File(Base):
         comment="Id пользователя, добавившего файл."
     )
 
-    user: Mapped["User"] = relationship(
-        "User", back_populates="files", uselist=False)
-    user_details = relationship(
-        "UserDetails", back_populates="profile_image")
-    books = relationship(
-        "Book", back_populates="content")
+    # Связи
+    user: Mapped["User"] = relationship(lazy="selectin", back_populates="files", uselist=False)
+    user_details: Mapped[List["UserDetails"]] = relationship(lazy="selectin", back_populates="profile_image")
+    books: Mapped["Book"] = relationship(lazy="selectin", back_populates="content")
+    book_preview_image_list: Mapped[List["BookPreviewImage"]] = relationship(lazy="selectin", back_populates="preview_content")
 
     __table_args__ = (
         UniqueConstraint('file_key', name='uq_file_key'),

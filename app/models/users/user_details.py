@@ -28,5 +28,5 @@ class UserDetails(Base):
         comment="URL изображения профиля."
     )
 
-    user: Mapped["User"] = relationship("User", back_populates="details", uselist=False)
-    profile_image: Mapped["File"] = relationship("File", back_populates="user_details", uselist=False)
+    user: Mapped["User"] = relationship(lazy="selectin", back_populates="details", uselist=False)
+    profile_image: Mapped["File"] = relationship(lazy="selectin", back_populates="user_details", uselist=False)

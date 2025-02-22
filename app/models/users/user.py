@@ -1,7 +1,7 @@
 from sqlalchemy import String
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 
 from app.db import Base
 from app.schemas.constants import UserRoleDB
@@ -32,21 +32,21 @@ class User(Base):
         comment="Время регистрации пользователя."
     )
 
+    # Связи
     credentials: Mapped["UserCredentials"] = relationship(
-        "UserCredentials", back_populates="user", uselist=False, cascade="all, delete-orphan")
-    files: Mapped["File"] = relationship(
-        'File', back_populates='user', cascade="save-update, merge")
+        lazy="selectin", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    files: Mapped[List["File"]] = relationship(
+        lazy="selectin", back_populates='user', cascade="save-update, merge")
     details: Mapped["UserDetails"] = relationship(
-        "UserDetails", back_populates="user", uselist=False, cascade="all, delete-orphan")
-    added_books: Mapped["Book"] = relationship(
-        "Book", back_populates="user", cascade="save-update, merge")
+        lazy="selectin", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    added_books: Mapped[List["Book"]] = relationship(
+        lazy="selectin", back_populates="user", cascade="save-update, merge")
 
     # TODO: Add relationships to:
     #  - support_request
     #  - user_personal_list
     #  - book_rating
     #  - user_bookmark
-    #  - books
     #  - author_curators
     #  - publisher_curators
 

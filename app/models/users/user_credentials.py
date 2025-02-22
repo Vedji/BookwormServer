@@ -29,7 +29,7 @@ class UserCredentials(Base):
         comment="Тип шифрования пароля."
     )
 
-    user: Mapped["User"] = relationship("User", back_populates="credentials")
+    user: Mapped["User"] = relationship(lazy="selectin", back_populates="credentials")
 
     def __repr__(self):
         return f"<models.UserCredentials(user_id='{self.user_id}', email='{self.email}', password_encryption='{self.password_encryption}')>"

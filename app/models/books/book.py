@@ -2,7 +2,7 @@ import datetime
 
 from sqlalchemy import String, ForeignKey, Date, func
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from typing import TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 
 from app.db import Base
 from app.schemas.constants import PasswordEncryptionTypes, AllowedBookFileFormats
@@ -10,6 +10,7 @@ from app.schemas.constants import PasswordEncryptionTypes, AllowedBookFileFormat
 if TYPE_CHECKING:
     from ..users import User
     from .. import File
+    from . import BookPreviewImage
 
 
 class Book(Base):
@@ -37,8 +38,11 @@ class Book(Base):
     updated_at: Mapped[datetime.datetime] = mapped_column(nullable=False, server_default=func.now())
     created_at: Mapped[datetime.datetime] = mapped_column(nullable=False, server_default=func.now())
 
-    user: Mapped["User"] = relationship("User", back_populates="added_books")
-    content: Mapped["File"] = relationship("File", back_populates="books", uselist=False)
+    # Связи
+    user: Mapped["User"] = relationship(lazy="selectin", back_populates="added_books")
+    content: Mapped["File"] = relationship(lazy="selectin", back_populates="books", uselist=False)
+    preview_images: Mapped[List["BookPreviewImage"]] = relationship(lazy="selectin", back_populates="for_book")
+
 
     def __repr__(self):
         return f"<Book(book_id='{self.book_id}')>"
