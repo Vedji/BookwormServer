@@ -3,9 +3,10 @@
 """
 
 # import modules
-from . import users
-from . import books
+from . import users     # Импортирование модуля пользователей
+from . import books     # Импортирование модуля книг
+from . import reviews   # Импортирование модуля пользовательских отзывов
 
 # import classes
-from .files import File
-from .languages import Language
+from .files import File             # Импортирование модели для хранения файлов
+from .languages import Language     # Импортирование модели для хранения языков

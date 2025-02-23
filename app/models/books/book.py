@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from .. import File
     from . import BookPreviewImage, BookTranslation
     from .genres import BookGenre
+    from ..reviews import BookRating
 
 
 class Book(Base):
@@ -45,6 +46,8 @@ class Book(Base):
     preview_images: Mapped[List["BookPreviewImage"]] = relationship(lazy="selectin", back_populates="for_book")
     book_translations: Mapped[List["BookTranslation"]] = relationship(lazy="selectin", back_populates="book")
     book_genres: Mapped[List["BookGenre"]] = relationship(lazy="selectin", back_populates="book")
+    book_ratings: Mapped[List["BookRating"]] = relationship(
+        lazy="selectin", back_populates="book")
 
 
     def __repr__(self):

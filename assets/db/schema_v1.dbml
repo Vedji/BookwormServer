@@ -148,7 +148,7 @@ Table user_credentials {
   user_id integer [not null, Note: "Идентификатор пользователя в БД."]
   email varchar(256) [unique, not null, Note: "Почта пользователя."]
   password_hash varchar(256) [not null, Note: "Зашифрованный пароль пользователя."]
-  password_encryption ENUM("none", "bcrypt", "argon2", "scrypt") [not null, default: "none", Note: "Тип шифрования пароля."]
+  password_encryption password_encryption_type [not null, default: "none", Note: "Тип шифрования пароля."]
   password_updated_at timestamp [not null, default: `now()`, Note: "Когда пароль был обновлен в последний раз."]
 
   Indexes {
@@ -404,7 +404,7 @@ Ref: book_genres.book_id > books.book_id [Note: "Внешний ключ на и
 Ref: book_genres.genre_id > genres.genre_id [Note: "Внешний ключ на идентификатор жанра."]
 
 
-Table genres_translations [Note: "Таблица хранит описание жанров."]{
+Table genre_translations [Note: "Таблица хранит описание жанров."]{
   genre_id integer [not null, Note: "Идентификатор жанра. "]
   language_code language_codes [not null, note: 'Идентификатор языка. ']
   genre_name varchar(255) [not null, Note: "Название жанра. "]
@@ -413,8 +413,8 @@ Table genres_translations [Note: "Таблица хранит описание �
     (genre_id, language_code) [unique, pk]
   }
 }
-Ref: genres_translations.genre_id > genres.genre_id [ Note: "Внешний ключ для ассоциации с жанрами." ]
-Ref: genres_translations.language_code > languages.language_code [ Note: "Внешний ключ отражающий код языка." ]
+Ref: genre_translations.genre_id > genres.genre_id [ Note: "Внешний ключ для ассоциации с жанрами." ]
+Ref: genre_translations.language_code > languages.language_code [ Note: "Внешний ключ отражающий код языка." ]
 // END book genres group
 
 Table books [Note: "Таблица хранит основную информацию о книгах."]{
@@ -466,12 +466,12 @@ Table book_translations [Note: "Таблица хранить локализац
   }
 }
 
-Table book_rating [Note: "Таблица хранить пользовательские оценки для книг."]{
-  user_id integer [not null, ref: - users.user_id, Note: "Индентификатор пользователя."]
-  book_id integer [not null, ref: - books.book_id, Note: "Индентификатор книги."]
+Table book_ratings [Note: "Таблица хранить пользовательские оценки для книг."]{
+  user_id integer [not null, Note: "Идентификатор пользователя."]
+  book_id integer [not null, Note: "Идентификатор книги."]
   rating tinyint [
     not null, default: 0,
-    Note: 'Значение пользовательской оценки, доложно соответствовать уловию: `CHECK (rating >= 0 AND rating <= 5)`.']
+    Note: 'Пользовательская оценка, должно соответствовать условию: `CHECK (rating >= 0 AND rating <= 5)`.']
 
   created_at timestamp [not null, default: `now()`, Note: "Когда была поставлена оценка."]
 
@@ -479,11 +479,22 @@ Table book_rating [Note: "Таблица хранить пользователь
     (user_id, book_id) [pk, unique]
   }
 }
+Ref: users.user_id - book_ratings.user_id
+Ref: books.book_id - book_ratings.book_id
 
-Table book_comments{
-  comment_id integer [pk, not null, increment]
-  book_id integer [ref: > books.book_id]
-  language_code language_codes [not null, ref: > languages.language_code, note: 'Отвечает за локализацию']
-  message text [not null]
+Table book_comments [Note: "Таблица хранит пользовательские комментарии к книгам."]{
+  // TODO: Add user relationship
+  user_id integer [not null, Note: "Идентификатор пользователя."]
+  book_id integer [not null, Note: "Идентификатор книги."]
+  language_code language_codes [not null, Note: 'Отвечает за локализацию.']
+
+  message text [not null, Note: "Содержимое комментария."]
+
+  Indexes {
+    (user_id, book_id) [pk, unique]
+  }
 }
+Ref: users.user_id < book_comments.user_id
+Ref: books.book_id < book_comments.book_id
+Ref: languages.language_code < book_comments.language_code
 // END books group
