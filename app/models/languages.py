@@ -6,7 +6,9 @@ import datetime
 from app.db import Base
 from app.schemas.constants import AllowedFileFormats, FileStatus, LanguageCodes
 
+
 if TYPE_CHECKING:
+    from .books.genres import GenreTranslation
     from .books import BookTranslation
 
 
@@ -21,10 +23,9 @@ class Language(Base):
     )
 
     book_translations: Mapped[List["BookTranslation"]] = relationship(lazy="selectin", back_populates="language")
+    genre_translations: Mapped[List["GenreTranslation"]] = relationship(lazy="selectin", back_populates="language")
 
     # TODO: Add relationships for:
-    #   - genres_translations
-    #   - book_translations
     #   - book_comments
 
     def __repr__(self):
