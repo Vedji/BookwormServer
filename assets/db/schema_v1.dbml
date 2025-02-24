@@ -296,6 +296,8 @@ Table support_requests [
     not null,
     Note: "Индификатор пользователя, который оставил заявку."
   ]
+
+  moderator_comment text [null, Note: "Ответ модератора."]
   reviewed_user_id integer [
     not null,
     Note: "Индификатор пользователя, который рассмотрел заявку."
@@ -366,7 +368,7 @@ Table authors [Note: " -> Таблица хранит информацию об 
   last_name varchar(255) [not null, Note: "Фамилия автора."]
   contact_email varchar(255) [null, Note: "Контактная почта для автора."]
   website varchar(1024) [null, Note: "Веб-сайт автора."]
-  birthday timestap [not null, Note: "Дата рождения автора."]
+  birthday timestamp [not null, Note: "Дата рождения автора."]
   nationaly varchar(255) [null, Note: "Место рождения автора."]
   description text [not null, Note: "Описание профиля автора."]
 }
@@ -461,7 +463,7 @@ Table books [Note: "Таблица хранит основную информа�
 Ref: books.added_user > users.user_id [ Note: "Внешний ключ указывающий на пользователя, добавившего произведение." ]
 Ref: books.book_content - files.file_id [ Note: "Внешний ключ указывающий на файл книги." ]
 
-Table book_preview_images{
+Table book_preview_images [Note: "Таблица хранит списки превью изображений для книг."]{
   book_id integer [pk, not null, Note: "Идентификатор книги."]
   file_id integer [not null, Note: "Идентификатор изображения."]
 
@@ -524,3 +526,39 @@ Ref: users.user_id < book_comments.user_id
 Ref: books.book_id < book_comments.book_id
 Ref: languages.language_code < book_comments.language_code
 // END books group
+
+Table book_forum_questions [
+  Note: '''Таблица хранит вопросы к книгам (в формате вопрос-ответы). '''
+]{
+  forum_id integer [not null, Note: "Идентификатор форума."]
+  book_id integer [not null, Note: "Идентификатор книги, к которой относится вопрос."]
+
+  is_open bool [not null, default: false, Note: "Открыто ли обсуждение?"]
+  title varchar(256) [not null, Note: "Заголовок вопроса."]
+  question_message text [null, Note: "Текст вопроса."]
+
+  added_user integer [not null, Note: "Пользователь, который добавил этот вопрос."]
+  created_at timestamp [not null, default: `now()`, Note: "Время ссоздания вопроса."]
+
+  Indexes {
+    forum_id [pk]
+  }
+}
+Ref: book_forum_questions.book_id > books.book_id
+Ref: book_forum_questions.added_user > users.user_id
+
+Table book_forum_answers [Note: "Таблица ответов к вопросам."] {
+  answer_id integer [not null, Note: "Идентификатор ответа."]
+  forum_id integer [not null, Note: "Идентификатор вопроса, к которому относится этот ответ."]
+
+  message text [not null, Note: "Сообщение ответа."]
+
+  added_user integer [not null, Note: "Пользователь, который оставил этот ответ."]
+  created_at timestamp [not null, default: `now()`, Note: "Время, когда был оставлен этот ответ."]
+
+  Indexes {
+    answer_id [pk]
+  }
+}
+Ref: book_forum_answers.forum_id > book_forum_questions.forum_id
+Ref: book_forum_answers.added_user > users.user_id
