@@ -1,18 +1,18 @@
 import datetime
 
-from sqlalchemy import String, ForeignKey, Date, func
+from sqlalchemy import String, ForeignKey, func
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from typing import List, TYPE_CHECKING
 
 from app.db import Base
-from app.schemas.constants import PasswordEncryptionTypes, AllowedBookFileFormats
+from app.schemas.constants import AllowedBookFileFormats
 
 if TYPE_CHECKING:
     from ..users import User
     from .. import File
     from . import BookPreviewImage, BookTranslation
     from .genres import BookGenre
-    from ..reviews import BookRating
+    from ..reviews import BookRating, BookComment
 
 
 class Book(Base):
@@ -48,6 +48,7 @@ class Book(Base):
     book_genres: Mapped[List["BookGenre"]] = relationship(lazy="selectin", back_populates="book")
     book_ratings: Mapped[List["BookRating"]] = relationship(
         lazy="selectin", back_populates="book")
+    book_comments: Mapped[List["BookComment"]] = relationship(lazy="selectin")
 
 
     def __repr__(self):

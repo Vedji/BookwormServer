@@ -1,15 +1,15 @@
-from sqlalchemy import (String, ForeignKey, UniqueConstraint, event, insert)
+from sqlalchemy import (String)
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from typing import List, TYPE_CHECKING
-import datetime
 
 from app.db import Base
-from app.schemas.constants import AllowedFileFormats, FileStatus, LanguageCodes
+from app.schemas.constants import LanguageCodes
 
 
 if TYPE_CHECKING:
     from .books.genres import GenreTranslation
     from .books import BookTranslation
+    from .reviews import BookComment
 
 
 class Language(Base):
@@ -24,9 +24,7 @@ class Language(Base):
 
     book_translations: Mapped[List["BookTranslation"]] = relationship(lazy="selectin", back_populates="language")
     genre_translations: Mapped[List["GenreTranslation"]] = relationship(lazy="selectin", back_populates="language")
-
-    # TODO: Add relationships for:
-    #   - book_comments
+    book_comments: Mapped[List["BookComment"]] = relationship(lazy="selectin")
 
     def __repr__(self):
         return (f"<Language("

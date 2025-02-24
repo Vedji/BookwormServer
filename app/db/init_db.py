@@ -19,6 +19,7 @@ def insert_initial_data(target, connection, **kw):
     connection.execute(
         insert(Language),
         [
+            {"language_code": LanguageCodes.UNDEFINED.value, "language_name": "Язык не определен."},
             {"language_code": LanguageCodes.RU.value, "language_name": "Русский"},
             {"language_code": LanguageCodes.EN.value, "language_name": "Английский"},
         ]

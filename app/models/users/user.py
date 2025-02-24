@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from . import UserCredentials, UserDetails
     from .. import File
     from ..books import Book
-    from ..reviews import BookRating
+    from ..reviews import BookRating, BookComment
 
 
 
@@ -45,6 +45,9 @@ class User(Base):
         lazy="selectin", back_populates="user", cascade="save-update, merge")
     book_ratings: Mapped[List["BookRating"]] = relationship(
         lazy="selectin", back_populates="user")
+    book_comments: Mapped[List["BookComment"]] = relationship(
+        lazy="selectin"
+    )
 
     # TODO: Add relationships to:
     #  - support_request
