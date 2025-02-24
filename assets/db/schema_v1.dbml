@@ -10,9 +10,9 @@ Project{
 
 // Start default enums
 Enum language_codes {
-  "none"
-  "ru"
-  "en"
+  "UNDEFINED"
+  "RU"
+  "EN"
 }
 
 Enum roles {
@@ -35,9 +35,9 @@ Enum file_status{
   "local" [Note: "File store in local server."]
 }
 
-Enum personal_list_status{
-  "default" [Note: "Personal list is to default(Her can't edit, deleted or added to user)."]
-  "created" [Note: "Personal list is to added user(Her can edit, deleted or added to user)."]
+Enum personal_list_types {
+  "DEFAULT" [Note: "Personal list is to default(Her can't edit, deleted or added to user)."]
+  "CREATED" [Note: "Personal list is to added user(Her can edit, deleted or added to user)."]
 }
 
 Enum allowed_file_formats{
@@ -118,7 +118,10 @@ Ref: files.added_user >  users.user_id [Note: "Пользователь може
 
 
 // START user group
-Table users {
+Table users [
+  Note: '''Таблица хранит уникальный индификатор пользователей в системе,
+  их никнеймы, роли, время обновления и создания профиля в БД.'''
+] {
   user_id integer [increment, not null, Note: "Идентификатор пользователя в системе."]
   username varchar(128) [unique, not null, Note: "Никнейм пользователя."]
   role roles [not null, default: 1, Note: "ID роли пользователя."]
@@ -131,7 +134,7 @@ Table users {
   }
 }
 
-Table user_details {
+Table user_details [Note: '''Таблица хранить детальную информацию о профиле пользователей.''']{
   user_id integer [not null, Note: "Идентификатор пользователя."]
   description text [null, Note: "Описание профиля пользователя."]
   profile_image_id integer [null, Note: "URL изображения профиля."]
@@ -144,7 +147,7 @@ Ref: user_details.user_id - users.user_id [Note: "У каждого пользо
 Ref: user_details.profile_image_id - files.file_id [Note: "Указывает на запись в таблице файлов, которая соответствует аватарки пользователя."]
 
 
-Table user_credentials {
+Table user_credentials [Note: '''Таблица хранит данные для аунтентификации пользователей.'''] {
   user_id integer [not null, Note: "Идентификатор пользователя в БД."]
   email varchar(256) [unique, not null, Note: "Почта пользователя."]
   password_hash varchar(256) [not null, Note: "Зашифрованный пароль пользователя."]
@@ -175,38 +178,44 @@ Table user_login_attempts [Note: "Логи попыток вход пользо�
 Ref: user_login_attempts.user_id > users.user_id [delete: cascade, Note: "Связь попытки входа с пользователем."]
 
   // START Bookmarks group
-  Table user_bookmarks {
-    bookmarkd_id integer [pk, not null, increment]
-    user_id integer [not null, ref: - users.user_id]
-    book_id integer [not null, ref: - books.book_id]
-    bookmark bigint [not null, default: 0]
-    book_file_type allowed_book_file_formats [not null]
+  Table user_bookmarks [Note: "Таблица хранить закладки пользователей в книгах."]{
+    bookmarkd_id integer [pk, not null, increment, Note: "Идентификатор книжной закладки."]
+    user_id integer [not null, ref: - users.user_id, Note: "Идентификатор пользователя."]
+    book_id integer [not null, ref: - books.book_id, Note: "Идентификатор книги."]
+    bookmark bigint [not null, default: 0, Note: "Позиция в тексте"]
+    book_file_type allowed_book_file_formats [not null, Note: "Тип файла книги, к которому относиться закладка."]
 
-    created_at timestamp [not null, default: `now()`]
+    created_at timestamp [not null, default: `now()`, Note: "Время создания закладки."]
 
     Indexes {
       ( user_id, book_id ) [ unique ]
     }
   }
 
-  Table bookmark_epub{
-    bookmark_id integer [not null, ref: - user_bookmarks.bookmarkd_id]
-    location varchar(255) [not null]
+  Table bookmark_epub [Note: "Таблица закладок для книг в формате `EPUB`."]{
+    bookmark_id integer [
+      not null, ref: - user_bookmarks.bookmarkd_id,
+      Note: "Идентификатор закладки, к которой относится запись."]
+    location varchar(255) [not null, Note: "Указатель на заготовок в `EPUB`."]
   }
 
-  Table bookmark_fb2{
-    bookmark_id integer [not null, ref: - user_bookmarks.bookmarkd_id]
-    position integer [not null]
+  Table bookmark_fb2 [Note: "Таблица закладок для книг в формате `FB2`."]{
+    bookmark_id integer [
+      not null, ref: - user_bookmarks.bookmarkd_id,
+      Note: "Идентификатор закладки, к которой относится запись."]
+    position bigint [not null, Note: "Позиция в тексте на закладку."]
   }
 
-  Table bookmark_markdown{
-    bookmark_id integer [not null, ref: - user_bookmarks.bookmarkd_id]
-    heading TEXT [not null]
+  Table bookmark_markdown [Note: "? Таблица закладок для книг в формате `Markdown`."]{
+    bookmark_id integer [
+      not null, ref: - user_bookmarks.bookmarkd_id,
+      Note: "Идентификатор закладки, к которой относится запись."]
+    heading TEXT [not null, Note: "Указатель на заголовок."]
   }
   // END Bookmarks group
 
 Table user_personal_lists [
-  note:
+  Note:
   '''
     Таблица описывает персональные списки пользователей для произведений.
      При создании нового пользователя, у него должны быть сгенерированы
@@ -214,32 +223,46 @@ Table user_personal_lists [
      + Читаю (Reading)
      + В планах (Plans)
      + Брошено (Dropped)
-     + Прочитано (Readed)
+     + Прочитано (Read)
      + Любимое (Likes)
      '''
   ] {
-    personal_list_id integer [pk, not null, increment]
-    user_id integer [ref: > users.user_id]
+    personal_list_id integer [
+      pk, not null, increment,
+      Note: "Идентификатор пользовательского списка."]
 
-    list_name varchar(32) [not null]
-    list_type personal_list_status [
+    user_id integer [
+      not null, Note: "Идентификатор пользователя которому принадлежит этот список."]
+
+    list_name varchar(32) [not null, Note: "Название персонального списка."]
+    list_type personal_list_types [
       not null,
-      note: "Может ли пользователь редактировать этот список"
+      Note: "Может ли пользователь редактировать этот список"
     ]
+
+    updated_at timestamp [not null, default: `now()`, Note: "Время обновления пользовательского списка."]
+    created_at timestamp [not null, default: `now()`, Note: "Время создания пользовательского списка."]
 
     Indexes {
       (user_id, list_name) [unique]
     }
 }
+Ref: user_personal_lists.user_id > users.user_id
 
-Table user_personal_lists_items{
-  personal_list_id integer [ref: > user_personal_lists.personal_list_id]
-  book_id integer [ref: > books.book_id]
+Table user_personal_list_items [
+  Note: "Таблица хранить записи о добавленных книгах в пользовательские списки."
+]{
+  personal_list_id integer [
+    not null, ref: > user_personal_lists.personal_list_id,
+    Note: "Идентификатор пользовательского списка."]
+  book_id integer [
+    not null, ref: > books.book_id,
+    Note: "Идентификатор книги."]
+  added_at timestamp [not null, default: `now`, Note: "Время добавления книги в пользовательский список."]
 
   Indexes {
     (personal_list_id, book_id) [pk, unique]
   }
-
 }
 
 // END user group
@@ -312,7 +335,7 @@ Ref: requests_to_get_role_author.ticked_id - support_requests.ticked_id [
 Table requests_to_get_role_publisher [
   Note: "Таблица запросов на получение роли издателя контента."
 ]{
-  ticked_id integer [not null, Note: "Индификатор заявки в поддержку."]
+  ticked_id integer [not null, Note: "Идентификатор заявки в поддержку."]
 
   publisher_name varchar(255) [not null, Note: "Название издателя."]
   website varchar(1024) [null, Note: "Ссылка на персональный сайт издателя (Если есть)."]
@@ -331,52 +354,52 @@ Ref: requests_to_get_role_publisher.ticked_id - support_requests.ticked_id
 
 
 // START authors group
-table author_curators{
-  author_curator_id integer [pk, not null, increment]
-  account_id integer [ref: - users.user_id, not null]
-  author_id integer [ref: - authors.author_id]
+table author_curators [Note: "-> Таблица хранить курирующие аккаунты для авторов книг."]{
+  author_curator_id integer [pk, not null, increment, Note: "Уникальный идентификатор таблицы."]
+  account_id integer [ref: - users.user_id, not null, Note: "Идентификатор курирующего пользователя."]
+  author_id integer [ref: - authors.author_id, Note: "Идентификатор профиля автора."]
 }
 
-Table authors{
-  author_id integer [pk, not null, increment]
-  first_name varchar(255)
-  last_name varchar(255)
-  contact_email varchar(255) [not null]
-  website varchar(1024) [not null]
-  birthday timestap [not null]
-  nationaly varchar(255) [null]
-  description text [not null]
+Table authors [Note: " -> Таблица хранит информацию об авторах книг."]{
+  author_id integer [pk, not null, increment, Note: "Идентификатор автора."]
+  first_name varchar(255) [not null, Note: "Имя автора."]
+  last_name varchar(255) [not null, Note: "Фамилия автора."]
+  contact_email varchar(255) [null, Note: "Контактная почта для автора."]
+  website varchar(1024) [null, Note: "Веб-сайт автора."]
+  birthday timestap [not null, Note: "Дата рождения автора."]
+  nationaly varchar(255) [null, Note: "Место рождения автора."]
+  description text [not null, Note: "Описание профиля автора."]
 }
 
-Table book_authors {
-  book_id integer [ref: > books.book_id]
-  author_id integer [ref: > authors.author_id]
+Table book_authors [Note: " -> Таблица хранит список книг, которые опубликованы авторами."] {
+  book_id integer [ref: > books.book_id, Note: "Идентификатор книги."]
+  author_id integer [ref: > authors.author_id, Note: "Идентификатор автора."]
 }
 // END authors group
 
 
 // START publishers group
-Table publishers {
-  publisher_id integer [pk, not null, increment]
-  name varchar(255) [not null]
-  website varchar(1024) [not null]
-  contact_email varchar(255) [not null]
-  phone varchar(50) [not null]
-  founded_year YEAR [not null]
-  description text [not null]
-  created_at timestamp [not null]
+Table publishers [Note: " -> Таблица хранить профили издателей."]{
+  publisher_id integer [pk, not null, increment, Note: "Уникальный идентификатор издателя."]
+  name varchar(255) [not null, Note: "Название издательства."]
+  website varchar(1024) [not null, Note: "Веб-сайт издательства."]
+  contact_email varchar(255) [not null, Note: "Контактный почтовый адрес издательства."]
+  phone varchar(50) [not null, Note: "Контактный телефон издательства."]
+  founded_year YEAR [not null, Note: "Дата основания издательства."]
+  description text [not null, Note: "Описания профиля издательства."]
+  created_at timestamp [not null, Note: "Дата создания издательства в БД."]
 
 }
 
-Table publisher_curators{
-  publisher_curator_id integer [pk, not null, increment]
-  account_id integer [ref: - users.user_id, not null]
-  publisher_id integer [ref: - publishers.publisher_id]
+Table publisher_curators [Note: "Кураторы издательства."]{
+  publisher_curator_id integer [pk, not null, increment, Note: "Уникальный идентификатор куратора."]
+  account_id integer [ref: - users.user_id, not null, Note: "Идентификатор курирующего пользователя."]
+  publisher_id integer [ref: - publishers.publisher_id, Note: "Идентификатор издательства."]
 }
 
-Table book_publishers{
-  publisher_id integer [ref: > publishers.publisher_id]
-  book_id integer [ref: > books.book_id]
+Table book_publishers [Note: "Таблица хранить книги, которые опубликовали авторы."]{
+  publisher_id integer [ref: > publishers.publisher_id, Note: "Идентификатор издательства."]
+  book_id integer [ref: > books.book_id, Note: "Идентификатор книги."]
 }
 // END publishers group
 
@@ -455,8 +478,8 @@ Ref: files.file_id < book_preview_images.file_id [Note: "Указатель на
 
 Table book_translations [Note: "Таблица хранить локализации названия и описания книги."] {
   // books_localization_id [pk, not null, increment]
-  book_id integer [ref: > books.book_id, not null, Note: "Идентификатор книги."]
-  language_code language_codes [not null, ref: > languages.language_code, note: 'Идентификатор локализации.']
+  book_id integer [not null, Note: "Идентификатор книги."]
+  language_code language_codes [not null, Note: 'Идентификатор локализации.']
 
   book_title varchar(256) [not null, Note: "Название произведения."]
   book_description text [null, Note: "Локализация описания книги."]
@@ -465,6 +488,9 @@ Table book_translations [Note: "Таблица хранить локализац
     (book_id, language_code) [pk, unique]
   }
 }
+Ref: book_translations.book_id > books.book_id
+Ref: book_translations.language_code > languages.language_code
+
 
 Table book_ratings [Note: "Таблица хранить пользовательские оценки для книг."]{
   user_id integer [not null, Note: "Идентификатор пользователя."]
