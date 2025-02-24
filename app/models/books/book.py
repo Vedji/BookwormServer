@@ -7,12 +7,14 @@ from typing import List, TYPE_CHECKING
 from app.db import Base
 from app.schemas.constants import AllowedBookFileFormats
 
+
 if TYPE_CHECKING:
-    from ..users import User
-    from .. import File
     from . import BookPreviewImage, BookTranslation
     from .genres import BookGenre
+    from .. import File
     from ..reviews import BookRating, BookComment
+    from ..users import User
+    from ..users.profile.personal_lists import UserPersonalListItem
 
 
 class Book(Base):
@@ -41,15 +43,23 @@ class Book(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(nullable=False, server_default=func.now())
 
     # Связи
-    user: Mapped["User"] = relationship(lazy="selectin", back_populates="added_books")
-    content: Mapped["File"] = relationship(lazy="selectin", back_populates="books", uselist=False)
-    preview_images: Mapped[List["BookPreviewImage"]] = relationship(lazy="selectin", back_populates="for_book")
-    book_translations: Mapped[List["BookTranslation"]] = relationship(lazy="selectin", back_populates="book")
-    book_genres: Mapped[List["BookGenre"]] = relationship(lazy="selectin", back_populates="book")
+    user: Mapped["User"] = relationship(
+        lazy="selectin", back_populates="added_books")
+    content: Mapped["File"] = relationship(
+        lazy="selectin", back_populates="books", uselist=False)
+    preview_images: Mapped[List["BookPreviewImage"]] = relationship(
+        lazy="selectin", back_populates="for_book")
+    book_translations: Mapped[List["BookTranslation"]] = relationship(
+        lazy="selectin", back_populates="book")
+    book_genres: Mapped[List["BookGenre"]] = relationship(
+        lazy="selectin", back_populates="book")
     book_ratings: Mapped[List["BookRating"]] = relationship(
         lazy="selectin", back_populates="book")
-    book_comments: Mapped[List["BookComment"]] = relationship(lazy="selectin")
-
+    book_comments: Mapped[List["BookComment"]] = relationship(
+        lazy="selectin", back_populates="book")
+    user_personal_list_items: Mapped[List["UserPersonalListItem"]] = relationship(
+        lazy="selectin", back_populates="book"
+    )
 
     def __repr__(self):
         return f"<Book(book_id='{self.book_id}')>"

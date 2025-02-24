@@ -22,9 +22,12 @@ class Language(Base):
         String(50), nullable=False, comment="Название языка"
     )
 
-    book_translations: Mapped[List["BookTranslation"]] = relationship(lazy="selectin", back_populates="language")
-    genre_translations: Mapped[List["GenreTranslation"]] = relationship(lazy="selectin", back_populates="language")
-    book_comments: Mapped[List["BookComment"]] = relationship(lazy="selectin")
+    book_translations: Mapped[List["BookTranslation"]] = relationship(
+        lazy="selectin", back_populates="language")
+    genre_translations: Mapped[List["GenreTranslation"]] = relationship(
+        lazy="selectin", back_populates="language")
+    book_comments: Mapped[List["BookComment"]] = relationship(
+        lazy="selectin", back_populates="language")
 
     def __repr__(self):
         return (f"<Language("
