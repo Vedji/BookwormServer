@@ -42,6 +42,7 @@ class TestUserBookmark:
         get_db_local_case.add_all([book_1, book_2])
         await get_db_local_case.commit()
 
+        # Создаем закладки
         bookmark_11 = UserBookmark(
             user_id=user_1.user_id,
             book_id=book_1.book_id,
@@ -66,6 +67,7 @@ class TestUserBookmark:
         await get_db_local_case.commit()
         assert bookmark_11.bookmark == 0
 
+        # Добавляем типизированные по типу файла книги закладки к основной таблице закладок
         bookmark_fb2_1 = BookmarkFB2(
             bookmark_id=bookmark_11.bookmark_id,
             position=21
@@ -89,26 +91,29 @@ class TestUserBookmark:
         await get_db_local_case.refresh(bookmark_21)
         await get_db_local_case.refresh(bookmark_22)
 
-        assert bookmark_fb2_1 is bookmark_11.bookmark_fb2
+        # Проверяем, что они корректно добавились
+        assert bookmark_fb2_1.bookmark_id is bookmark_11.bookmark_fb2.bookmark_id
         assert bookmark_fb2_1.position == 21
         assert bookmark_11.bookmark_epub is None
-        assert bookmark_fb2_2 is bookmark_21.bookmark_fb2
+        assert bookmark_fb2_2.bookmark_id is bookmark_21.bookmark_fb2.bookmark_id
         assert bookmark_fb2_2.position == 31
         assert bookmark_21.bookmark_epub is None
 
-        assert bookmark_epub_1 is bookmark_12.bookmark_epub
+        assert bookmark_epub_1.bookmark_id is bookmark_12.bookmark_epub.bookmark_id
         assert bookmark_epub_1.location == "21"
         assert bookmark_12.bookmark_fb2 is None
-        assert bookmark_epub_2 is bookmark_22.bookmark_epub
+        assert bookmark_epub_2.bookmark_id is bookmark_22.bookmark_epub.bookmark_id
         assert bookmark_epub_2.location == "31"
         assert bookmark_22.bookmark_fb2 is None
 
+        # Удаляем пользовательские закладки
         buffer_bookmark_id_1 = bookmark_11.bookmark_id
         await get_db_local_case.delete(bookmark_11)
         buffer_bookmark_id_2 = bookmark_12.bookmark_id
         await get_db_local_case.delete(bookmark_12)
         await get_db_local_case.commit()
 
+        # Проверяем, что вместе с пользовательскими закладками, удалились и типизированные
         bookmark_11 = await get_db_local_case.get(UserBookmark, buffer_bookmark_id_1)
         assert bookmark_11 is None
         bookmark_12 = await get_db_local_case.get(UserBookmark, buffer_bookmark_id_2)
