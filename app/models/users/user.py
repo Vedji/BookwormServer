@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from ..books import Book
     from ..reviews import BookRating, BookComment
     from .profile.personal_lists import UserPersonalList
-
+    from .profile.bookmarks import UserBookmark
 
 
 class User(Base):
@@ -47,9 +47,10 @@ class User(Base):
     book_ratings: Mapped[List["BookRating"]] = relationship(
         lazy="selectin", back_populates="user")
     book_comments: Mapped[List["BookComment"]] = relationship(
-        lazy="selectin", back_populates="user"
-    )
+        lazy="selectin", back_populates="user")
     user_personal_list: Mapped[List["UserPersonalList"]] = relationship(
+        lazy="selectin", back_populates="user")
+    user_bookmarks: Mapped[List["UserBookmark"]] = relationship(
         lazy="selectin", back_populates="user")
 
     # TODO: Add relationships to:

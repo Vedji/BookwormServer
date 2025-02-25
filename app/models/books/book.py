@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from ..reviews import BookRating, BookComment
     from ..users import User
     from ..users.profile.personal_lists import UserPersonalListItem
+    from ..users.profile.bookmarks import UserBookmark
 
 
 class Book(Base):
@@ -58,8 +59,9 @@ class Book(Base):
     book_comments: Mapped[List["BookComment"]] = relationship(
         lazy="selectin", back_populates="book")
     user_personal_list_items: Mapped[List["UserPersonalListItem"]] = relationship(
-        lazy="selectin", back_populates="book"
-    )
+        lazy="selectin", back_populates="book")
+    user_bookmarks: Mapped[List["UserBookmark"]] = relationship(
+        lazy="selectin", back_populates="book")
 
     def __repr__(self):
         return f"<Book(book_id='{self.book_id}')>"
