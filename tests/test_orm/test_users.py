@@ -220,7 +220,7 @@ class TestUser:
 
     @pytest.mark.asyncio
     async def test_user_login_attempts(self, get_db_local_case: AsyncSession):
-        """ Проверяет ORM класс для таблицы `user_details` """
+        """ Проверяет ORM класс для таблицы `user_login_attempts` """
         role = schemas.constants.UserRoleDB.USER
 
         # Создание нового пользователя и его проверка
