@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from . import UserCredentials, UserDetails
     from .. import File
     from ..books import Book
+    from ..books.forums import BookForumQuestions, BookForumAnswers
     from ..reviews import BookRating, BookComment
     from .profile.personal_lists import UserPersonalList
     from .profile.bookmarks import UserBookmark
@@ -75,14 +76,16 @@ class User(Base):
         "SupportRequest", lazy="selectin", foreign_keys="SupportRequest.reviewed_user_id", back_populates="reviewed_by")
     # Издательство, которое может курировать пользователь
     publisher_curator: Mapped["PublisherCurators"] = relationship(
-        lazy="selectin", back_populates="user", uselist=False
-    )
+        lazy="selectin", back_populates="user", uselist=False)
+    # Аккаунт автора, который может курировать пользователь
     author_curator: Mapped["AuthorCurators"] = relationship(
-        lazy="selectin", back_populates="user", uselist=False
-    )
-
-    # TODO: Add relationships to:
-    #  - author_curators
+        lazy="selectin", back_populates="user", uselist=False)
+    # Вопросы заданные на форуме к книгам
+    book_forum_questions: Mapped[List["BookForumQuestions"]] = relationship(
+        lazy="selectin", back_populates="user")
+    # Ответы на вопросы, которые оставил пользователь
+    book_forum_answers: Mapped[List["BookForumAnswers"]] = relationship(
+        lazy="selectin", back_populates="user")
 
     def __repr__(self):
         return (f"<models.User("

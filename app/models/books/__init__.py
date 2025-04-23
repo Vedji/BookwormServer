@@ -4,6 +4,7 @@
 
 # Импорт модулей
 from . import genres
+from . import forums
 
 # Импорт классов
 from .book import Book # Модель для с книг
