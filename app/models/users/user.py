@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from .profile.personal_lists import UserPersonalList
     from .profile.bookmarks import UserBookmark
     from ..supports import SupportRequest
+    from .roles.publisher import PublisherCurators
+    from .roles.author import AuthorCurators
 
 
 class User(Base):
@@ -71,10 +73,16 @@ class User(Base):
     # Список обработанных пользователем заявок из технической поддержки
     reviewed_tickets: Mapped[List["SupportRequest"]] = relationship(
         "SupportRequest", lazy="selectin", foreign_keys="SupportRequest.reviewed_user_id", back_populates="reviewed_by")
+    # Издательство, которое может курировать пользователь
+    publisher_curator: Mapped["PublisherCurators"] = relationship(
+        lazy="selectin", back_populates="user", uselist=False
+    )
+    author_curator: Mapped["AuthorCurators"] = relationship(
+        lazy="selectin", back_populates="user", uselist=False
+    )
 
     # TODO: Add relationships to:
     #  - author_curators
-    #  - publisher_curators
 
     def __repr__(self):
         return (f"<models.User("
