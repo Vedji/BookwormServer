@@ -7,7 +7,7 @@ from app.db import Base
 from app.schemas.constants import UserRoleDB
 
 if TYPE_CHECKING:
-    from . import UserCredentials, UserDetails
+    from . import UserCredentials, UserDetails, UserLoginAttempts
     from .. import File
     from ..books import Book
     from ..books.forums import BookForumQuestions, BookForumAnswers
@@ -86,6 +86,9 @@ class User(Base):
     # Ответы на вопросы, которые оставил пользователь
     book_forum_answers: Mapped[List["BookForumAnswers"]] = relationship(
         lazy="selectin", back_populates="user")
+    # Список попыток входа в аккаунт пользователя
+    user_login_attempt: Mapped[List["UserLoginAttempts"]] = relationship(
+        lazy="selectin", foreign_keys="UserLoginAttempts.user_id", back_populates="user")
 
     def __repr__(self):
         return (f"<models.User("

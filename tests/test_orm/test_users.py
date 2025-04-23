@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 # import app modules
-from app.models.users import User, UserCredentials, UserDetails
+from app.models.users import User, UserCredentials, UserDetails, UserLoginAttempts
 from app import schemas
 
 # import test environment
@@ -22,6 +22,7 @@ class TestUser:
         - User
         - UserCredentials
         - UserDetails
+        - UserLoginAttempts
     """
 
     CREATE_USER_TESTS = [
@@ -216,3 +217,31 @@ class TestUser:
         # Проверяем, что SQLAlchemy выбросило исключение об уникальности записей в таблице аутентификации пользователей.
         assert "user_credentials.user_id" in err.value.__str__() and "UNIQUE" in err.value.__str__(), \
             "Ошибка при добавлении второй записи аутентификации для одного пользователя"
+
+    @pytest.mark.asyncio
+    async def test_user_login_attempts(self, get_db_local_case: AsyncSession):
+        """ Проверяет ORM класс для таблицы `user_details` """
+        role = schemas.constants.UserRoleDB.USER
+
+        # Создание нового пользователя и его проверка
+        user = await UserCrudORM.create_user(get_db_local_case, username="username-1", role=role)
+
+        ula_1 = UserLoginAttempts(
+            user_id=user.user_id,
+            is_success=False,
+            ip_address="192.168.0.1"
+        )
+        ula_2 = UserLoginAttempts(
+            user_id=user.user_id,
+            is_success=True,
+            ip_address="192.168.0.2"
+        )
+        get_db_local_case.add_all([ula_1, ula_2])
+        await get_db_local_case.commit()
+        await get_db_local_case.refresh(user)
+
+        assert ula_1 in user.user_login_attempt
+        assert ula_2 in user.user_login_attempt
+
+        assert list(filter(lambda x: x.ip_address == "192.168.0.2", user.user_login_attempt))[0].is_success
+        assert not list(filter(lambda x: x.ip_address == "192.168.0.1", user.user_login_attempt))[0].is_success
