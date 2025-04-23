@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
 # import app modules
-from app.models.reviews import BookComment
 from app.models.users.profile.bookmarks import UserBookmark, BookmarkEPUB, BookmarkFB2
 from app.schemas.constants import UserRoleDB, AllowedBookFileFormats
 
@@ -11,7 +10,6 @@ from app.schemas.constants import UserRoleDB, AllowedBookFileFormats
 from .. import (init_sqlite_db_local_case,  get_db_local_case)
 from tests.utils.orm.books import BookCrudORM
 from tests.utils.orm.users import UserCrudORM
-from app.models.users.profile.personal_lists import UserPersonalList, UserPersonalListItem
 
 
 class TestUserBookmark:

@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from ..reviews import BookRating, BookComment
     from .profile.personal_lists import UserPersonalList
     from .profile.bookmarks import UserBookmark
+    from ..supports import SupportRequest
 
 
 class User(Base):
@@ -36,26 +37,42 @@ class User(Base):
     )
 
     # Связи
+    # Данные для авторизации пользователя
     credentials: Mapped["UserCredentials"] = relationship(
-        lazy="selectin", back_populates="user", uselist=False, cascade="all, delete-orphan")
+        lazy="selectin", back_populates="user", uselist=False,
+        cascade="all, delete-orphan")
+    # Список файлов, которые добавил пользователь
     files: Mapped[List["File"]] = relationship(
-        lazy="selectin", back_populates='user', cascade="save-update, merge")
+        lazy="selectin", back_populates='user',
+        cascade="save-update, merge")
+    # Детальное описание профиля пользователя
     details: Mapped["UserDetails"] = relationship(
-        lazy="selectin", back_populates="user", uselist=False, cascade="all, delete-orphan")
+        lazy="selectin", back_populates="user",
+        uselist=False, cascade="all, delete-orphan")
+    # Список добавленных книг пользователя
     added_books: Mapped[List["Book"]] = relationship(
-        lazy="selectin", back_populates="user", cascade="save-update, merge")
+        lazy="selectin", back_populates="user",
+        cascade="save-update, merge")
+    # Список оставленных оценок к книгам пользователя
     book_ratings: Mapped[List["BookRating"]] = relationship(
         lazy="selectin", back_populates="user")
+    # Список комментариев пользователя к книгам
     book_comments: Mapped[List["BookComment"]] = relationship(
         lazy="selectin", back_populates="user")
+    # Список персональных списков пользователя
     user_personal_list: Mapped[List["UserPersonalList"]] = relationship(
         lazy="selectin", back_populates="user")
+    # Список закладок пользователя
     user_bookmarks: Mapped[List["UserBookmark"]] = relationship(
         lazy="selectin", back_populates="user")
+    # Список отправленных пользователем заявок в техническую поддержку
+    submitted_tickets: Mapped[List["SupportRequest"]] = relationship(
+        "SupportRequest", lazy="selectin", foreign_keys="SupportRequest.user_id", back_populates="created_by")
+    # Список обработанных пользователем заявок из технической поддержки
+    reviewed_tickets: Mapped[List["SupportRequest"]] = relationship(
+        "SupportRequest", lazy="selectin", foreign_keys="SupportRequest.reviewed_user_id", back_populates="reviewed_by")
 
     # TODO: Add relationships to:
-    #  - support_request
-    #  - user_bookmark
     #  - author_curators
     #  - publisher_curators
 

@@ -6,6 +6,7 @@
 from . import users     # Импортирование модуля пользователей
 from . import books     # Импортирование модуля книг
 from . import reviews   # Импортирование модуля пользовательских отзывов
+from . import supports  # Импортирование модуля запросов в поддержку
 
 # import classes
 from .files import File             # Импортирование модели для хранения файлов
