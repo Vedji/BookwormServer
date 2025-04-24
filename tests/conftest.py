@@ -3,6 +3,10 @@ from botocore.config import Config
 from _pytest.monkeypatch import MonkeyPatch
 
 from app.utils import settings
+import app.db
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from app.db.base import Base
 
 S3_TEST_FOLDER = "bookworm-server-test/"
 
