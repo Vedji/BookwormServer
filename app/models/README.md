@@ -1,62 +1,75 @@
-# Описание ORM моделей
+# Модуль `models/`
 
 ## Оглавление
-[Перечисления используемые в ORM-модулях](#перечисления-используемые-в-orm-модулях)
- - [Перечисление `RequestStatus`](#перечисление-requeststatus)
- - [Перечисление `SupportRequestTypes`](#перечисление-supportrequesttypes)
- - [Перечисление `AllowedBookFileFormats`](#перечисление-allowedbookfileformats)
- - [Перечисление `AllowedFileFormats`](#перечисление-allowedfileformats)
- - [Перечисление `FileStatus`](#перечисление-filestatus)
- - [Перечисление `LanguageCodes`](#перечисление-languagecodes)
- - [Перечисление `PasswordEncryptionTypes`](#перечисление-passwordencryptiontypes)
- - [Перечисление `UserPersonalListType`](#перечисление-userpersonallisttype)
- - [Перечисление `S3ACL`](#перечисление-s3acl)
- - [Перечисление `UserRoleDB`](#перечисление-userroledb)
- - [Перечисление `UserRole`](#перечисление-userrole)
+- [Сокращения аттрибутов orm-моделей](#сокращения-аттрибутов-orm-моделей)
+- [Перечисления используемые в ORM-модулях](#перечисления-используемые-в-orm-модулях)
+  - [Перечисление `RequestStatus`](#перечисление-requeststatus)
+  - [Перечисление `SupportRequestTypes`](#перечисление-supportrequesttypes)
+  - [Перечисление `AllowedBookFileFormats`](#перечисление-allowedbookfileformats)
+  - [Перечисление `AllowedFileFormats`](#перечисление-allowedfileformats)
+  - [Перечисление `FileStatus`](#перечисление-filestatus)
+  - [Перечисление `LanguageCodes`](#перечисление-languagecodes)
+  - [Перечисление `PasswordEncryptionTypes`](#перечисление-passwordencryptiontypes)
+  - [Перечисление `UserPersonalListType`](#перечисление-userpersonallisttype)
+  - [Перечисление `S3ACL`](#перечисление-s3acl)
+  - [Перечисление `UserRoleDB`](#перечисление-userroledb)
+  - [Перечисление `UserRole`](#перечисление-userrole)
+- [Описание ORM-моделей](#описание-orm-моделей)
+  - [ORM-модель `File`](#orm-модель-file)
+  - [ORM-модель `Language`](#orm-модель-language)
+  - [Модуль `book/`](#модуль-book)
+    - [ORM-модель `Book`](#orm-модель-book)
+    - [ORM-модель `BookPreviewImage`](#orm-модель-bookpreviewimage)
+    - [ORM-модель `BookTranslation`](#orm-модель-booktranslation)
+    - [Модуль `forums/`](#модуль-forums)
+      - [ORM-модель `BookForumAnswers`](#orm-модель-bookforumanswers)
+      - [ORM-модель `BookForumQuestions`](#orm-модель-bookforumquestions)
+    - [Модуль `genres/`](#модуль-genres)
+      - [ORM-модель `BookGenre`](#orm-модель-bookgenre)
+      - [ORM-модель `Genre`](#orm-модель-genre)
+      - [ORM-модель `GenreTranslation`](#orm-модель-genretranslation)
+  - [Модуль `reviews/`](#модуль-reviews)
+    - [ORM-модель `BookComment`](#orm-модель-bookcomment)
+    - [ORM-модель `BookRating`](#orm-модель-bookrating)
+  - [Модуль `supports/`](#модуль-supports)
+    - [ORM-модель `SupportRequest`](#orm-модель-supportrequest)
+    - [ORM-модель `RequestsToGetRoleAuthor`](#orm-модель-requeststogetroleauthor)
+    - [ORM-модель `RequestsToGetRolePublisher`](#orm-модель-requeststogetrolepublisher)
+  - [Модуль `users/`](#модуль-users)
+    - [ORM-модель `User`](#orm-модель-user)
+    - [ORM-модель `UserCredentials`](#orm-модель-usercredentials)
+    - [ORM-модель `UserDetails`](#orm-модель-userdetails)
+    - [ORM-модель `UserLoginAttempts`](#orm-модель-userloginattempts)
+    - [Модуль `profile/`](#модуль-profile)
+      - [Модуль `bookmarks/`](#модуль-bookmarks)
+        - [ORM-модель `UserBookmark`](#orm-модель-userbookmark)
+        - [ORM-модель `BookmarkEPUB`](#orm-модель-bookmarkepub)
+        - [ORM-модель `BookmarkFB2`](#orm-модель-bookmarkfb2)
+      - [Модуль `personal_lists/`](#модуль-personal_lists)
+        - [ORM-модель `UserPersonalList`](#orm-модель-userpersonallist)
+        - [ORM-модель `UserPersonalListItem`](#orm-модель-userpersonallistitem)
+    - [Модуль `roles/`](#модуль-roles)
+      - [Модуль `author/`](#модуль-author)
+        - [ORM-модель `Authors`](#orm-модель-authors)
+        - [ORM-модель `AuthorCurators`](#orm-модель-authorcurators)
+        - [ORM-модель `BookAuthors`](#orm-модель-bookauthors)
+      - [Модуль `publisher/`](#модуль-publisher)
+        - [ORM-модель `Publishers`](#orm-модель-publishers)
+        - [ORM-модель `PublisherCurators`](#orm-модель-publishercurators)
+        - [ORM-модель `BookPublishers`](#orm-модель-bookpublishers)
 
-[Описание ORM-моделей](#описание-orm-моделей)
- - [ORM-модель `File`](#orm-модель-file)
- - [ORM-модель `Language`](#orm-модель-language)
- - [Модуль `book/`](#модуль-book)
-   - [ORM-модель `Book`](#orm-модель-book)
-   - [ORM-модель `BookPreviewImage`](#orm-модель-bookpreviewimage)
-   - [ORM-модель `BookTranslation`](#orm-модель-booktranslation)
-   - [Модуль `forums/`](#модуль-forums)
-     - [ORM-модель `BookForumAnswers`](#orm-модель-bookforumanswers)
-     - [ORM-модель `BookForumQuestions`](#orm-модель-bookforumquestions)
-   - [Модуль `genres/`](#модуль-genres)
-     - [ORM-модель `BookGenre`](#orm-модель-bookgenre)
-     - [ORM-модель `Genre`](#orm-модель-genre)
-     - [ORM-модель `GenreTranslation`](#orm-модель-genretranslation)
- - [Модуль `reviews/`](#модуль-reviews)
-   - [ORM-модель `BookComment`](#orm-модель-bookcomment)
-   - [ORM-модель `BookRating`](#orm-модель-bookrating)
- - [Модуль `supports/`](#модуль-supports)
-   - [ORM-модель `SupportRequest`](#orm-модель-supportrequest)
-   - [ORM-модель `RequestsToGetRoleAuthor`](#orm-модель-requeststogetroleauthor)
-   - [ORM-модель `RequestsToGetRolePublisher`](#orm-модель-requeststogetrolepublisher)
- - [Модуль `users/`](#модуль-users)
-   - [ORM-модель `User`](#orm-модель-user)
-   - [ORM-модель `UserCredentials`](#orm-модель-usercredentials)
-   - [ORM-модель `UserDetails`](#orm-модель-userdetails)
-   - [ORM-модель `UserLoginAttempts`](#orm-модель-userloginattempts)
-   - [Модуль `profile/`](#модуль-profile)
-     - [Модуль `bookmarks/`](#модуль-bookmarks)
-       - [ORM-модель `UserBookmark`](#orm-модель-userbookmark)
-       - [ORM-модель `BookmarkEPUB`](#orm-модель-bookmarkepub)
-       - [ORM-модель `BookmarkFB2`](#orm-модель-bookmarkfb2)
-     - [Модуль `personal_lists/`](#модуль-personal_lists)
-       - [ORM-модель `UserPersonalList`](#orm-модель-userpersonallist)
-       - [ORM-модель `UserPersonalListItem`](#orm-модель-userpersonallistitem)
-   - [Модуль `roles/`](#модуль-roles)
-     - [Модуль `author/`](#модуль-author)
-       - [ORM-модель `Authors`](#orm-модель-authors)
-       - [ORM-модель `AuthorCurators`](#orm-модель-authorcurators)
-       - [ORM-модель `BookAuthors`](#orm-модель-bookauthors)
-     - [Модуль `publisher/`](#модуль-publisher)
-       - [ORM-модель `Publishers`](#orm-модель-publishers)
-       - [ORM-модель `PublisherCurators`](#orm-модель-publishercurators)
-       - [ORM-модель `BookPublishers`](#orm-модель-bookpublishers)
+## Сокращения аттрибутов orm-моделей
+| Полное название |  Сокращенное название  | Описание                                                                        | Примечание                                                          |
+|:---------------:|:----------------------:|:--------------------------------------------------------------------------------|:--------------------------------------------------------------------|
+|   Primary key   |           PK           | Уникальный идентификатор записи в таблице.                                      | Обязателен для каждой таблицы, не может быть NULL.                  |
+|  Autoincrement  |           AI           | Автоматическое увеличение значения при добавлении новой записи.                 | Используется для уникальных идентификаторов, часто с типом INTEGER. |
+|   Foreign key   |  FK("{table.column}")  | Ссылается на ключ в другой таблице.                                             | Для установления связи между таблицами.                             |
+|    Not Null     |           NN           | Ограничение, запрещающее хранение NULL в столбце.                               | Обязательно указывать, если в поле не могут быть NULL-значения.     |
+|      Null       |           N            | Позволяет хранить NULL-значения в столбце.                                      | Используется, если значение в столбце может быть неопределенным.    |
+|     Default     |   DEFAULT("{value}")   | Значение по умолчанию для столбца, если не указано иное.                        | Может быть использовано для установки значений по умолчанию.        |
+|     Unique      |         UNIQUE         | Ограничение, которое гарантирует, что все значения в столбце будут уникальными. | Используется для обеспечения уникальности значений в столбце.       |
+|      Check      | CHECK("{conditional}") | Ограничение для проверки значений в столбце на соответствие условию.            | Может быть использовано для проверки диапазонов или других условий. |
+
 
 ## Перечисления используемые в ORM-модулях
 Все перечисления описанные ниже, импортируются из модуля 
@@ -210,17 +223,19 @@
 
 **Поля**
 
-|    Поле     |   Тип    |                             Атрибуты                             |                       Описание                       |
-|:-----------:|:--------:|:----------------------------------------------------------------:|:----------------------------------------------------:|
-|   file_id   |   int    |       primary_key=True, autoincrement=True, nullable=False       |     Уникальный идентификатор файла в базе данных     |
-|  file_key   |   str    |                   unique=True, nullable=False                    | Ключ файла в формате S3 (`{file_path}/{file_name}`)  |
-|  mime_type  |   Enum   | default=AllowedFileFormats.INCORRECT_FILE_FORMAT, nullable=False | Mime-тип файла (например, изображение, текст и т.д.) |
-|   status    |   Enum   |             default=FileStatus.ACTIVE, nullable=True             |    Статус файла (например, активен или неактивен)    |
-| bucket_name |   str    |                          nullable=True                           |          Имя бакета в S3, где хранится файл          |
-|   s3_url    |   str    |                          nullable=True                           |              Прямая ссылка на файл в S3              |
-| expires_at  | datetime |                          nullable=True                           |       Время окончания действия ссылки на файл        |
-| uploaded_at | datetime |         default=datetime.datetime.now(), nullable=False          |            Время загрузки файла на сервер            |
-| added_user  |   int    | ForeignKey("users.user_id", ondelete="SET NULL"), nullable=True  |        ID пользователя, который загрузил файл        |
+
+
+|    Поле     |                             Тип                              |                  Аттрибуты                  |                       Описание                       |
+|:-----------:|:------------------------------------------------------------:|:-------------------------------------------:|:----------------------------------------------------:|
+|   file_id   |                             int                              |                 PK, AI, NN                  |     Уникальный идентификатор файла в базе данных     |
+|  file_key   |                             str                              |                 UNIQUE, NN                  | Ключ файла в формате S3 (`{file_path}/{file_name}`)  |
+|  mime_type  | Enum[(AllowedFileFormats)](#перечисление-allowedfileformats) |    DEFAULT("INCORRECT_FILE_FORMAT"), NN     | Mime-тип файла (например, изображение, текст и т.д.) |
+|   status    |         Enum[(FileStatus)](#перечисление-filestatus)         |            DEFAULT("ACTIVE"), N             |    Статус файла (например, активен или неактивен)    |
+| bucket_name |                             str                              |                      N                      |          Имя бакета в S3, где хранится файл          |
+|   s3_url    |                             str                              |                      N                      |              Прямая ссылка на файл в S3              |
+| expires_at  |                           datetime                           |                      N                      |       Время окончания действия ссылки на файл        |
+| uploaded_at |                           datetime                           |    DEFAULT(datetime.datetime.now()), NN     |            Время загрузки файла на сервер            |
+| added_user  |                             int                              | FK("users.user_id"), N, ondelete="SET NULL" |        ID пользователя, который загрузил файл        |
 
 **Связи**
 
@@ -232,19 +247,18 @@
 ---
 
 ### [ORM-модель `Language`](languages.py)
-**Описание**  
+**Описание**
 
 Модель представляет язык, используемый в системе. Она хранит языковые коды и соответствующие им названия языков. 
 
 **Поля**
 
-|     Поле      |  Тип   |                   Атрибуты                    |                          Описание                          |
-|:-------------:|:------:|:---------------------------------------------:|:----------------------------------------------------------:|
-| language_code | String | primary_key=True, nullable=False, unique=True | Код языка, идентификатор языка в БД (например, 'en', 'ru') |
-| language_name | String |                nullable=False                 |      Название языка (например, "English", "Русский")       |
+|     Поле      |                        Тип                         |   Аттрибуты    |                          Описание                          |
+|:-------------:|:--------------------------------------------------:|:--------------:|:----------------------------------------------------------:|
+| language_code | Enum[(LanguageCodes)](#перечисление-languagecodes) | PK, NN, UNIQUE | Код языка, идентификатор языка в БД (например, 'en', 'ru') |
+| language_name |                       String                       |       NN       |      Название языка (например, "English", "Русский")       |
 
 **Связи**
-
 - [**`book_translations`**](#orm-модель-booktranslation): указывает на переводы книг на этот язык.  
 - [**`genre_translations`**](#orm-модель-genretranslation): указывает на переводы жанров на этот язык.  
 - [**`book_comments`**](#orm-модель-bookcomment): указывает на комментарии к книгам, написанные на этом языке.  
@@ -269,19 +283,18 @@
 
 **Поля**
 
-|         Поле          |          Тип           |                       Атрибуты                       |                       Описание                        |
-|:---------------------:|:----------------------:|:----------------------------------------------------:|:-----------------------------------------------------:|
-|        book_id        |          int           | primary_key=True, autoincrement=True, nullable=False |            Уникальный идентификатор книги             |
-| book_publication_date |        datetime        |                    nullable=True                     |                 Дата публикации книги                 |
-|     book_content      |          int           |      ForeignKey("files.file_id"), nullable=True      |              ID файла с содержимым книги              |
-|   book_content_type   | AllowedBookFileFormats |                    nullable=False                    | Формат содержимого книги (например, EPUB, FB2 и т.д.) |
-|       book_isbn       |      str (до 14)       |                    nullable=True                     |            ISBN код книги без разделителей            |
-|      added_user       |          int           |      ForeignKey("users.user_id"), nullable=True      |          ID пользователя, добавившего книгу           |
-|      updated_at       |        datetime        |      nullable=False, server_default=func.now()       |              Дата последнего обновления               |
-|      created_at       |        datetime        |      nullable=False, server_default=func.now()       |             Дата создания записи о книге              |
+|         Поле          |                                 Тип                                  |           Атрибуты            |                       Описание                        |
+|:---------------------:|:--------------------------------------------------------------------:|:-----------------------------:|:-----------------------------------------------------:|
+|        book_id        |                                 int                                  |          PK, AI, NN           |            Уникальный идентификатор книги             |
+| book_publication_date |                               datetime                               |               N               |                 Дата публикации книги                 |
+|     book_content      |                                 int                                  |    FK("files.file_id"), N     |              ID файла с содержимым книги              |
+|   book_content_type   | Enum[(AllowedBookFileFormats)](#перечисление-allowedbookfileformats) |              NN               | Формат содержимого книги (например, EPUB, FB2 и т.д.) |
+|       book_isbn       |                             str (до 14)                              |               N               |            ISBN код книги без разделителей            |
+|      added_user       |                                 int                                  |    FK("users.user_id"), N     |          ID пользователя, добавившего книгу           |
+|      updated_at       |                               datetime                               | NN, server_default=func.now() |              Дата последнего обновления               |
+|      created_at       |                               datetime                               | NN, server_default=func.now() |             Дата создания записи о книге              |
 
 **Связи**
-
 - [**`user`**](#orm-модель-user) — пользователь, добавивший книгу.  
 - [**`content`**](#orm-модель-file) — файл, содержащий контент книги.  
 - [**`preview_images`**](#orm-модель-bookpreviewimage) — список изображений предварительного просмотра книги.  
@@ -304,12 +317,13 @@
 
 **Поля**
 
-|        Поле         |   Тип    |                                Атрибуты                                 |                       Описание                       |
-|:-------------------:|:--------:|:-----------------------------------------------------------------------:|:----------------------------------------------------:|
-|       book_id       |   int    |      ForeignKey("books.book_id"), primary_key=True, nullable=False      | Идентификатор книги, к которой относится изображение |
-|       file_id       |   int    |      ForeignKey("files.file_id"), primary_key=True, nullable=False      |           Идентификатор файла изображения            |
-| content_description |   str    | String(128), nullable=True, default="Описание изображения отсутствует." |             Краткое описание изображения             |
-|     created_at      | datetime |                nullable=False, server_default=func.now()                |    Дата и время добавления изображения в систему     |
+
+|        Поле         |     Тип     |                    Атрибуты                     |                       Описание                       |
+|:-------------------:|:-----------:|:-----------------------------------------------:|:----------------------------------------------------:|
+|       book_id       |     int     |           FK("books.book_id"), PK, NN           | Идентификатор книги, к которой относится изображение |
+|       file_id       |     int     |           FK("files.file_id"), PK, NN           |           Идентификатор файла изображения            |
+| content_description | String(128) | N, DEFAULT("Описание изображения отсутствует.") |             Краткое описание изображения             |
+|     created_at      |  datetime   |             NN, DEFAULT(func.now())             |    Дата и время добавления изображения в систему     |
 
 **Связи**
 
@@ -325,12 +339,13 @@
 
 **Поля**
 
-|       Поле       | Тип |                                Атрибуты                                 |            Описание            |
-|:----------------:|:---:|:-----------------------------------------------------------------------:|:------------------------------:|
-|     book_id      | int |      ForeignKey("books.book_id"), primary_key=True, nullable=False      | Идентификатор связанной книги  |
-|  language_code   | str | ForeignKey("languages.language_code"), primary_key=True, nullable=False |       Код языка перевода       |
-|    book_title    | str |                       String(256), nullable=False                       | Название книги на данном языке |
-| book_description | str |                              nullable=True                              | Описание книги на данном языке |
+|       Поле       |     Тип     |               Атрибуты                |            Описание            |
+|:----------------:|:-----------:|:-------------------------------------:|:------------------------------:|
+|     book_id      |     int     |      FK("books.book_id"), PK, NN      | Идентификатор связанной книги  |
+|  language_code   |     str     | FK("languages.language_code"), PK, NN |       Код языка перевода       |
+|    book_title    | String(256) |                  NN                   | Название книги на данном языке |
+| book_description |     str     |                   N                   | Описание книги на данном языке |
+
 
 **Связи**
 
@@ -350,13 +365,13 @@
 
 **Поля**
 
-|    Поле    |   Тип    |                          Атрибуты                           |                   Описание                   |
-|:----------:|:--------:|:-----------------------------------------------------------:|:--------------------------------------------:|
-| answer_id  |   int    |    primary_key=True, autoincrement=True, nullable=False     |       Уникальный идентификатор ответа        |
-|  forum_id  |   int    | ForeignKey("book_forum_questions.forum_id"), nullable=False | Ссылка на вопрос, к которому относится ответ |
-|  message   |   str    |                       nullable=False                        |                 Текст ответа                 |
-| added_user |   int    |         ForeignKey("users.user_id"), nullable=False         |        Пользователь, написавший ответ        |
-| created_at | datetime |          nullable=False, server_default=func.now()          |        Дата и время публикации ответа        |
+|    Поле    |   Тип    |                Атрибуты                 |                   Описание                   |
+|:----------:|:--------:|:---------------------------------------:|:--------------------------------------------:|
+| answer_id  |   int    |               PK, AI, NN                |       Уникальный идентификатор ответа        |
+|  forum_id  |   int    | FK("book_forum_questions.forum_id"), NN | Ссылка на вопрос, к которому относится ответ |
+|  message   |   str    |                   NN                    |                 Текст ответа                 |
+| added_user |   int    |         FK("users.user_id"), NN         |        Пользователь, написавший ответ        |
+| created_at | datetime |      NN, server_default=func.now()      |        Дата и время публикации ответа        |
 
 **Связи**
 - [**`question`**](#orm-модель-bookforumquestions): главный вопрос, к которому относиться ответ.
@@ -371,15 +386,15 @@
 
 **Поля**
 
-|       Поле       |   Тип    |                       Атрибуты                       |                Описание                 |
-|:----------------:|:--------:|:----------------------------------------------------:|:---------------------------------------:|
-|     forum_id     |   int    | primary_key=True, autoincrement=True, nullable=False | Уникальный идентификатор вопроса форума |
-|     book_id      |   int    |     ForeignKey("books.book_id"), nullable=False      | Ссылка на книгу, к которой задан вопрос |
-|     is_open      |   bool   |             nullable=False, default=True             | Статус обсуждения: открыто или закрыто  |
-|      title       |   str    |             String(256), nullable=False              |            Заголовок вопроса            |
-| question_message |   str    |                    nullable=True                     |  Содержимое самого вопроса (если есть)  |
-|    added_user    |   int    |     ForeignKey("users.user_id"), nullable=False      |   Пользователь, создавший этот вопрос   |
-|    created_at    | datetime |      server_default=func.now(), nullable=False       |      Дата и время создания вопроса      |
+|       Поле       |     Тип     |        Атрибуты         |                Описание                 |
+|:----------------:|:-----------:|:-----------------------:|:---------------------------------------:|
+|     forum_id     |     int     |       PK, AI, NN        | Уникальный идентификатор вопроса форума |
+|     book_id      |     int     | FK("books.book_id"), NN | Ссылка на книгу, к которой задан вопрос |
+|     is_open      |    bool     |    NN, DEFAULT(True)    | Статус обсуждения: открыто или закрыто  |
+|      title       | String(256) |           NN            |            Заголовок вопроса            |
+| question_message |     str     |            N            |  Содержимое самого вопроса (если есть)  |
+|    added_user    |     int     | FK("users.user_id"), NN |   Пользователь, создавший этот вопрос   |
+|    created_at    |  datetime   | DEFAULT(func.now()), NN |      Дата и время создания вопроса      |
 
 **Связи**
 
@@ -399,10 +414,11 @@
 
 **Поля**
 
-|   Поле   | Тип |                            Атрибуты                             |      Описание       |
-|:--------:|:---:|:---------------------------------------------------------------:|:-------------------:|
-| book_id  | int |  ForeignKey("books.book_id"), primary_key=True, nullable=False  | Идентификатор книги |
-| genre_id | int | ForeignKey("genres.genre_id"), primary_key=True, nullable=False | Идентификатор жанра |
+
+|   Поле   | Тип |           Аттрибуты           |      Описание       |
+|:--------:|:---:|:-----------------------------:|:-------------------:|
+| book_id  | int |  FK("books.book_id"), PK, NN  | Идентификатор книги |
+| genre_id | int | FK("genres.genre_id"), PK, NN | Идентификатор жанра |
 
 **Связи**
 
@@ -418,9 +434,9 @@
 
 **Поля**
 
-|   Поле   | Тип |                       Атрибуты                       |            Описание            |
-|:--------:|:---:|:----------------------------------------------------:|:------------------------------:|
-| genre_id | int | primary_key=True, autoincrement=True, nullable=False | Уникальный идентификатор жанра |
+|   Поле   | Тип |  Атрибуты  |            Описание            |
+|:--------:|:---:|:----------:|:------------------------------:|
+| genre_id | int | PK, AI, NN | Уникальный идентификатор жанра |
 
 **Связи**
 
@@ -437,11 +453,11 @@
 
 **Поля**
 
-|     Поле      |      Тип      |                                Атрибуты                                 |                    Описание                     |
-|:-------------:|:-------------:|:-----------------------------------------------------------------------:|:-----------------------------------------------:|
-|   genre_id    |      int      |     ForeignKey("genres.genre_id"), primary_key=True, nullable=False     |  Ссылка на жанр, которому принадлежит перевод   |
-| language_code | LanguageCodes | ForeignKey("languages.language_code"), primary_key=True, nullable=False | Код языка, на котором представлен перевод жанра |
-|  genre_name   |   str(255)    |                             nullable=False                              |     Название жанра на соответствующем языке     |
+|     Поле      |                        Тип                         |               Аттрибуты               |                    Описание                     |
+|:-------------:|:--------------------------------------------------:|:-------------------------------------:|:-----------------------------------------------:|
+|   genre_id    |                        int                         |     FK("genres.genre_id"), PK, NN     |  Ссылка на жанр, которому принадлежит перевод   |
+| language_code | Enum[(LanguageCodes)](#перечисление-languagecodes) | FK("languages.language_code"), PK, NN | Код языка, на котором представлен перевод жанра |
+|  genre_name   |                    String(255)                     |                  NN                   |     Название жанра на соответствующем языке     |
 
 **Связи**
 
@@ -462,12 +478,12 @@
 
 **Поля**
 
-|     Поле      |      Тип      |                                        Атрибуты                                        |                              Описание                              |
-|:-------------:|:-------------:|:--------------------------------------------------------------------------------------:|:------------------------------------------------------------------:|
-|    user_id    |      int      |             ForeignKey("users.user_id"), primary_key=True, nullable=False              |        Идентификатор пользователя, оставившего комментарий         |
-|    book_id    |      int      |             ForeignKey("books.book_id"), primary_key=True, nullable=False              |        Идентификатор книги, к которой относится комментарий        |
-| language_code | LanguageCodes | ForeignKey("languages.language_code"), default=LanguageCodes.UNDEFINED, nullable=False | Код языка, для локализации комментария. По умолчанию - `UNDEFINED` |
-|    message    |      str      |                                     nullable=False                                     |                       Содержимое комментария                       |
+|     Поле      |                        Тип                         |                       Атрибуты                        |                              Описание                              |
+|:-------------:|:--------------------------------------------------:|:-----------------------------------------------------:|:------------------------------------------------------------------:|
+|    user_id    |                        int                         |              FK("users.user_id"), PK, NN              |        Идентификатор пользователя, оставившего комментарий         |
+|    book_id    |                        int                         |              FK("books.book_id"), PK, NN              |        Идентификатор книги, к которой относится комментарий        |
+| language_code | Enum[(LanguageCodes)](#перечисление-languagecodes) | FK("languages.language_code"), DEFAULT(UNDEFINED), NN | Код языка, для локализации комментария. По умолчанию - `UNDEFINED` |
+|    message    |                        str                         |                          NN                           |                       Содержимое комментария                       |
 
 **Связи**
 
@@ -484,12 +500,12 @@
 
 **Поля**
 
-|    Поле    |   Тип    |                           Атрибуты                            |                      Описание                       |
-|:----------:|:--------:|:-------------------------------------------------------------:|:---------------------------------------------------:|
-|  user_id   |   int    | ForeignKey("users.user_id"), primary_key=True, nullable=False | Идентификатор пользователя, который поставил оценку |
-|  book_id   |   int    | ForeignKey("books.book_id"), primary_key=True, nullable=False | Идентификатор книги, для которой поставлена оценка  |
-|   rating   |   int    |                   nullable=False, default=0                   |      Оценка книги от пользователя (от 0 до 5)       |
-| created_at | datetime |           nullable=False, server_default=func.now()           |     Дата и время, когда была поставлена оценка      |
+|    Поле    |   Тип    |           Атрибуты            |                      Описание                       |
+|:----------:|:--------:|:-----------------------------:|:---------------------------------------------------:|
+|  user_id   |   int    |  FK("users.user_id"), PK, NN  | Идентификатор пользователя, который поставил оценку |
+|  book_id   |   int    |  FK("books.book_id"), PK, NN  | Идентификатор книги, для которой поставлена оценка  |
+|   rating   |   int    |        NN, DEFAULT(0)         |      Оценка книги от пользователя (от 0 до 5)       |
+| created_at | datetime | NN, server_default=func.now() |     Дата и время, когда была поставлена оценка      | 
 
 **Связи**
 
@@ -509,17 +525,17 @@
 
 **Поля**
 
-|         Поле         |          Тип          |                         Атрибуты                         |                      Описание                      |
-|:--------------------:|:---------------------:|:--------------------------------------------------------:|:--------------------------------------------------:|
-|      ticket_id       |          int          |   primary_key=True, autoincrement=True, nullable=False   |          Уникальный идентификатор заявки           |
-| support_request_type | `SupportRequestTypes` |      nullable=False, default=RequestStatus.PENDING       |       Тип запроса (например, запрос на роль)       |
-|        status        |    `RequestStatus`    |      nullable=False, default=RequestStatus.PENDING       |  Текущий статус заявки (например, ожидает ответа)  |
-|     reviewed_at      |       datetime        |               nullable=True, default=None                |             Время рассмотрения заявки              |
-|       subject        |          str          |               String(255), nullable=False                |                    Тема запроса                    |
-|       message        |          str          |                      nullable=True                       |                 Сообщение в заявке                 |
-|       user_id        |          int          |       ForeignKey("users.user_id"), nullable=False        | Идентификатор пользователя, который оставил заявку |
-|  moderator_comment   |          str          |                      nullable=True                       |             Ответ модератора на заявку             |
-|   reviewed_user_id   |          int          | ForeignKey("users.user_id"), nullable=True, default=None |  Идентификатор модератора, рассмотревшего заявку   |
+|         Поле         |                              Тип                               |               Атрибуты                |                      Описание                      |
+|:--------------------:|:--------------------------------------------------------------:|:-------------------------------------:|:--------------------------------------------------:|
+|      ticket_id       |                              int                               |              PK, AI, NN               |          Уникальный идентификатор заявки           |
+| support_request_type | Enum[(SupportRequestTypes)](#перечисление-supportrequesttypes) |        NN, DEFAULT("PENDING")         |       Тип запроса (например, запрос на роль)       |
+|        status        |       Enum[(RequestStatus)](#перечисление-requeststatus)       |        NN, DEFAULT("PENDING")         |  Текущий статус заявки (например, ожидает ответа)  |
+|     reviewed_at      |                            datetime                            |           N, DEFAULT(None)            |             Время рассмотрения заявки              |
+|       subject        |                              str                               |            String(255), NN            |                    Тема запроса                    |
+|       message        |                              str                               |                   N                   |                 Сообщение в заявке                 |
+|       user_id        |                              int                               |        FK("users.user_id"), NN        | Идентификатор пользователя, который оставил заявку |
+|  moderator_comment   |                              str                               |                   N                   |             Ответ модератора на заявку             |
+|   reviewed_user_id   |                              int                               | FK("users.user_id"), N, DEFAULT(None) |  Идентификатор модератора, рассмотревшего заявку   |
 
 **Связи**
 
@@ -537,16 +553,16 @@
 
 **Поля**
 
-|     Поле      |   Тип    |                                  Атрибуты                                  |                      Описание                      |
-|:-------------:|:--------:|:--------------------------------------------------------------------------:|:--------------------------------------------------:|
-|   ticked_id   |   int    | ForeignKey("support_requests.ticked_id"), primary_key=True, nullable=False |     Идентификатор заявки в систему поддержки.      |
-|  first_name   |   str    |                               nullable=False                               |         Имя автора, который подает запрос.         |
-|   last_name   |   str    |                               nullable=False                               |                  Фамилия автора.                   |
-| contact_email |   str    |                               nullable=False                               |               Почтовый адрес автора.               |
-|    website    |   str    |                               nullable=True                                | Ссылка на персональный сайт автора (если имеется). |
-|   birthday    | datetime |                               nullable=True                                |               Дата рождения автора.                |
-|  nationality  |   str    |                               nullable=True                                |              Страна рождения автора.               |
-|  description  |   str    |                               nullable=True                                |         Описание автора (пара слов о нем).         |
+|     Поле      |   Тип    |                 Атрибуты                 |                      Описание                      |
+|:-------------:|:--------:|:----------------------------------------:|:--------------------------------------------------:|
+|   ticked_id   |   int    | FK("support_requests.ticked_id"), PK, NN |     Идентификатор заявки в систему поддержки.      |
+|  first_name   |   str    |                    NN                    |         Имя автора, который подает запрос.         |
+|   last_name   |   str    |                    NN                    |                  Фамилия автора.                   |
+| contact_email |   str    |                    NN                    |               Почтовый адрес автора.               |
+|    website    |   str    |                    N                     | Ссылка на персональный сайт автора (если имеется). |
+|   birthday    | datetime |                    N                     |               Дата рождения автора.                |
+|  nationality  |   str    |                    N                     |              Страна рождения автора.               |
+|  description  |   str    |                    N                     |         Описание автора (пара слов о нем).         |
 
 **Связи**
 
@@ -563,15 +579,15 @@
 
 **Поля**
 
-|      Поле      |   Тип    |                                  Атрибуты                                  |              Описание               |
-|:--------------:|:--------:|:--------------------------------------------------------------------------:|:-----------------------------------:|
-|   ticked_id    |   int    | ForeignKey("support_requests.ticked_id"), primary_key=True, nullable=False |    Ссылка на заявку в поддержку     |
-| publisher_name |   str    |                        String(255), nullable=False                         |        Название издательства        |
-|    website     |   str    |                        String(1025), nullable=True                         | Веб-сайт издательства (если указан) |
-| contact_email  |   str    |                        String(255), nullable=False                         |    Контактный email издательства    |
-| contact_phone  |   str    |                         String(50), nullable=False                         |   Контактный телефон издательства   |
-|  founded_year  | datetime |                               nullable=False                               |     Дата основания издательства     |
-|  description   |   str    |                               nullable=False                               |        Описание издательства        |
+|      Поле      |     Тип      |                 Атрибуты                 |              Описание               |
+|:--------------:|:------------:|:----------------------------------------:|:-----------------------------------:|
+|   ticked_id    |     int      | FK("support_requests.ticked_id"), PK, NN |    Ссылка на заявку в поддержку     |
+| publisher_name | String(255)  |                    NN                    |        Название издательства        |
+|    website     | String(1025) |                    N                     | Веб-сайт издательства (если указан) |
+| contact_email  | String(255)  |                    NN                    |    Контактный email издательства    |
+| contact_phone  |  String(50)  |                    NN                    |   Контактный телефон издательства   |
+|  founded_year  |   datetime   |                    NN                    |     Дата основания издательства     |
+|  description   |     str      |                    NN                    |        Описание издательства        |
 
 **Связи**
 
@@ -590,12 +606,12 @@
 
 **Поля**
 
-|    Поле    |     Тип      |                       Атрибуты                       |                                  Описание                                   |
-|:----------:|:------------:|:----------------------------------------------------:|:---------------------------------------------------------------------------:|
-|  user_id   |     int      | primary_key=True, autoincrement=True, nullable=False |                    Уникальный идентификатор пользователя                    |
-|  username  |     str      |             unique=True, nullable=False              |                            Никнейм пользователя                             |
-|    role    | `UserRoleDB` |       default=UserRoleDB.USER, nullable=False        | Роль пользователя в системе (например, обычный пользователь, администратор) |
-| created_at |   datetime   |        default=datetime.now(), nullable=False        |                    Дата и время регистрации пользователя                    |
+|    Поле    |                      Тип                       |          Аттрибуты          |                                  Описание                                   |
+|:----------:|:----------------------------------------------:|:---------------------------:|:---------------------------------------------------------------------------:|
+|  user_id   |                      int                       |         PK, AI, NN          |                    Уникальный идентификатор пользователя                    |
+|  username  |                      str                       |         UNIQUE, NN          |                            Никнейм пользователя                             |
+|    role    | Enum[("UserRoleDB")](#перечисление-userroledb) |      DEFAULT(USER), NN      | Роль пользователя в системе (например, обычный пользователь, администратор) |
+| created_at |                    datetime                    | DEFAULT(datetime.now()), NN |                    Дата и время регистрации пользователя                    |
 
 **Связи**
 
@@ -624,12 +640,12 @@
 
 **Поля**
 
-|        Поле         |           Тип           |                           Атрибуты                            |                               Описание                               |
-|:-------------------:|:-----------------------:|:-------------------------------------------------------------:|:--------------------------------------------------------------------:|
-|       user_id       |           int           | ForeignKey("users.user_id"), primary_key=True, nullable=False |       Идентификатор пользователя, связанный с учетными данными       |
-|        email        |           str           |           String(256), unique=True, nullable=False            | Электронная почта пользователя, уникальная для каждой учетной записи |
-|    password_hash    |           str           |                  String(256), nullable=False                  |                  Зашифрованный пароль пользователя                   |
-| password_encryption | PasswordEncryptionTypes |     default=PasswordEncryptionTypes.NONE, nullable=False      |                        Тип шифрования пароля                         |
+|        Поле         |                                   Тип                                    |          Атрибуты           |                               Описание                               |
+|:-------------------:|:------------------------------------------------------------------------:|:---------------------------:|:--------------------------------------------------------------------:|
+|       user_id       |                                   int                                    | FK("users.user_id"), PK, NN |       Идентификатор пользователя, связанный с учетными данными       |
+|        email        |                               String(256)                                |         UNIQUE, NN          | Электронная почта пользователя, уникальная для каждой учетной записи |
+|    password_hash    |                               String(256)                                |             NN              |                  Зашифрованный пароль пользователя                   |
+| password_encryption | Enum[("PasswordEncryptionTypes")](#перечисление-passwordencryptiontypes) |      DEFAULT(NONE), NN      |                        Тип шифрования пароля                         |
 
 **Связи**
 
@@ -643,11 +659,11 @@
 Модель хранит подробности о пользователе.
 **Поля**
 
-|       Поле       | Тип |                                     Атрибуты                                      |                                  Описание                                   |
-|:----------------:|:---:|:---------------------------------------------------------------------------------:|:---------------------------------------------------------------------------:|
-|     user_id      | int | ForeignKey("users.user_id", ondelete="CASCADE"), primary_key=True, nullable=False | Идентификатор пользователя в БД. Уникален, ссылается на модель пользователя |
-|   description    | str |                                Text, nullable=True                                |                        Описание профиля пользователя                        |
-| profile_image_id | int |          ForeignKey("files.file_id", ondelete="SET NULL"), nullable=True          |      Ссылка на изображение профиля, может быть пустым (не установлено)      |
+|       Поле       | Тип |                  Атрибуты                   |                                  Описание                                   |
+|:----------------:|:---:|:-------------------------------------------:|:---------------------------------------------------------------------------:|
+|     user_id      | int |         FK("users.user_id"), PK, NN         | Идентификатор пользователя в БД. Уникален, ссылается на модель пользователя |
+|   description    | str |                      N                      |                        Описание профиля пользователя                        |
+| profile_image_id | int | FK("files.file_id", ondelete="SET NULL"), N |      Ссылка на изображение профиля, может быть пустым (не установлено)      |
 
 **Связи**
 
@@ -661,13 +677,13 @@
 
 **Поля**
 
-|    Поле    |   Тип    |                       Атрибуты                       |                        Описание                        |
-|:----------:|:--------:|:----------------------------------------------------:|:------------------------------------------------------:|
-| attempt_id |   int    | primary_key=True, autoincrement=True, nullable=False |         Уникальный идентификатор попытки входа         |
-|  user_id   |   int    |     ForeignKey("users.user_id"), nullable=False      | Идентификатор пользователя, совершившего попытку входа |
-| attempt_at | datetime |      nullable=False, server_default=func.now()       |       Время, когда была совершена попытка входа        |
-| is_success |   bool   |                    nullable=False                    |           Был ли вход успешным? (True/False)           |
-| ip_address |   str    |              String(45), nullable=True               |   IP-адрес, с которого была совершена попытка входа    |
+|    Поле    |    Тип     |           Атрибуты            |                        Описание                        |
+|:----------:|:----------:|:-----------------------------:|:------------------------------------------------------:|
+| attempt_id |    int     |          PK, AI, NN           |         Уникальный идентификатор попытки входа         |
+|  user_id   |    int     |    FK("users.user_id"), NN    | Идентификатор пользователя, совершившего попытку входа |
+| attempt_at |  datetime  | NN, server_default=func.now() |       Время, когда была совершена попытка входа        |
+| is_success |    bool    |              NN               |           Был ли вход успешным? (True/False)           |
+| ip_address | String(45) |               N               |   IP-адрес, с которого была совершена попытка входа    |
 
 **Связи**
 
@@ -691,14 +707,14 @@
 
 **Поля**
 
-|      Поле      |          Тип           |                       Атрибуты                       |              Описание              |
-|:--------------:|:----------------------:|:----------------------------------------------------:|:----------------------------------:|
-|  bookmark_id   |          int           | primary_key=True, autoincrement=True, nullable=False | Уникальный идентификатор закладки  |
-|    user_id     |          int           |     ForeignKey("users.user_id"), nullable=False      |     Идентификатор пользователя     |
-|    book_id     |          int           |     ForeignKey("books.book_id"), nullable=False      |        Идентификатор книги         |
-|    bookmark    |          int           |               nullable=True, default=0               |       Позиция в тексте книги       |
-| book_file_type | AllowedBookFileFormats |                    nullable=False                    | Тип файла книги (EPUB, FB2 и т.д.) |
-|   created_at   |        datetime        |      nullable=False, server_default=func.now()       |   Дата и время создания закладки   |
+|      Поле      |                                  Тип                                   |           Атрибуты            |              Описание              |
+|:--------------:|:----------------------------------------------------------------------:|:-----------------------------:|:----------------------------------:|
+|  bookmark_id   |                                  int                                   |          PK, AI, NN           | Уникальный идентификатор закладки  |
+|    user_id     |                                  int                                   |    FK("users.user_id"), NN    |     Идентификатор пользователя     |
+|    book_id     |                                  int                                   |    FK("books.book_id"), NN    |        Идентификатор книги         |
+|    bookmark    |                                  int                                   |         N, DEFAULT(0)         |       Позиция в тексте книги       |
+| book_file_type | Enum[("AllowedBookFileFormats")](#перечисление-allowedbookfileformats) |              NN               | Тип файла книги (EPUB, FB2 и т.д.) |
+|   created_at   |                                datetime                                | NN, server_default=func.now() |   Дата и время создания закладки   |
 
 **Связи**
 
@@ -717,10 +733,10 @@
 
 **Поля**
 
-|    Поле     |  Тип   |                                            Атрибуты                                            |                 Описание                  |
-|:-----------:|:------:|:----------------------------------------------------------------------------------------------:|:-----------------------------------------:|
-| bookmark_id |  int   | ForeignKey("user_bookmarks.bookmark_id", ondelete="CASCADE"), primary_key=True, nullable=False | Ссылка на основную закладку пользователя  |
-|  location   | string |                                  String(255), nullable=False                                   | Указатель на место в EPUB (например, CFI) |
+|    Поле     |     Тип     |                 Атрибуты                 |                 Описание                 |
+|:-----------:|:-----------:|:----------------------------------------:|:----------------------------------------:|
+| bookmark_id |     int     | FK("user_bookmarks.bookmark_id"), PK, NN | Ссылка на основную закладку пользователя |
+|  location   | String(255) |                    NN                    |        Указатель на место в EPUB         |
 
 **Связи**
 
@@ -736,10 +752,10 @@
 
 **Поля**
 
-|    Поле     | Тип |                                            Атрибуты                                            |              Описание              |
-|:-----------:|:---:|:----------------------------------------------------------------------------------------------:|:----------------------------------:|
-| bookmark_id | int | ForeignKey("user_bookmarks.bookmark_id", ondelete="CASCADE"), primary_key=True, nullable=False | Ссылка на основную запись закладки |
-|  position   | int |                                         nullable=False                                         |   Позиция в тексте формата `FB2`   |
+|    Поле     | Тип |                           Атрибуты                           |              Описание              |
+|:-----------:|:---:|:------------------------------------------------------------:|:----------------------------------:|
+| bookmark_id | int | FK("user_bookmarks.bookmark_id", ondelete="CASCADE"), PK, NN | Ссылка на основную запись закладки |
+|  position   | int |                              NN                              |   Позиция в тексте формата `FB2`   |
 
 **Связи**
 
@@ -762,14 +778,14 @@
 
 **Поля**
 
-|       Поле       |         Тип          |                       Атрибуты                       |                     Описание                      |
-|:----------------:|:--------------------:|:----------------------------------------------------:|:-------------------------------------------------:|
-| personal_list_id |         int          | primary_key=True, autoincrement=True, nullable=False | Уникальный идентификатор пользовательского списка |
-|     user_id      |         int          |     ForeignKey("users.user_id"), nullable=False      |     Пользователь, которому принадлежит список     |
-|    list_name     |       str(32)        |                    nullable=False                    |           Название персонального списка           |
-|    list_type     | UserPersonalListType |                    nullable=False                    | Тип списка, определяет возможность редактирования |
-|    updated_at    |       datetime       |      nullable=False, server_default=func.now()       |         Дата последнего обновления списка         |
-|    created_at    |       datetime       |      nullable=False, server_default=func.now()       |               Дата создания списка                |
+|       Поле       |                                Тип                                 |           Атрибуты            |                     Описание                      |
+|:----------------:|:------------------------------------------------------------------:|:-----------------------------:|:-------------------------------------------------:|
+| personal_list_id |                                int                                 |          PK, AI, NN           | Уникальный идентификатор пользовательского списка |
+|     user_id      |                                int                                 |    FK("users.user_id"), NN    |     Пользователь, которому принадлежит список     |
+|    list_name     |                             String(32)                             |              NN               |           Название персонального списка           |
+|    list_type     | Enum[("UserPersonalListType")](#перечисление-userpersonallisttype) |              NN               | Тип списка, определяет возможность редактирования |
+|    updated_at    |                              datetime                              | NN, server_default=func.now() |         Дата последнего обновления списка         |
+|    created_at    |                              datetime                              | NN, server_default=func.now() |               Дата создания списка                |
 
 **Связи**
 
@@ -786,11 +802,11 @@
 
 **Поля**
 
-|       Поле       |   Тип    |                                       Атрибуты                                       |                Описание                |
-|:----------------:|:--------:|:------------------------------------------------------------------------------------:|:--------------------------------------:|
-| personal_list_id |   int    | ForeignKey("user_personal_lists.personal_list_id"), primary_key=True, nullable=False | Идентификатор пользовательского списка |
-|     book_id      |   int    |            ForeignKey("books.book_id"), primary_key=True, nullable=False             |          Идентификатор книги           |
-|     added_at     | datetime |                      nullable=False, server_default=func.now()                       | Дата и время добавления книги в список |
+|       Поле       |   Тип    |                      Атрибуты                      |                Описание                |
+|:----------------:|:--------:|:--------------------------------------------------:|:--------------------------------------:|
+| personal_list_id |   int    | FK("user_personal_lists.personal_list_id"), PK, NN | Идентификатор пользовательского списка |
+|     book_id      |   int    |            FK("books.book_id"), PK, NN             |          Идентификатор книги           |
+|     added_at     | datetime |              NN, DEFAULT(func.now())               | Дата и время добавления книги в список |
 
 **Связи**
 
@@ -814,16 +830,16 @@
 
 **Поля**
 
-|     Поле      |    Тип    |                       Атрибуты                       |                Описание                |
-|:-------------:|:---------:|:----------------------------------------------------:|:--------------------------------------:|
-|   author_id   |    int    | primary_key=True, autoincrement=True, nullable=False |    Уникальный идентификатор автора     |
-|  first_name   | str(255)  |                    nullable=False                    |               Имя автора               |
-|   last_name   | str(255)  |                    nullable=False                    |             Фамилия автора             |
-| contact_email | str(255)  |                    nullable=False                    |        Электронная почта автора        |
-|    website    | str(1025) |                    nullable=True                     | Персональный сайт автора (если указан) |
-|   birthday    | datetime  |                    nullable=True                     |          Дата рождения автора          |
-|  nationality  | str(255)  |                    nullable=True                     |         Страна рождения автора         |
-|  description  |    str    |                    nullable=True                     | Краткое описание или биография автора  |
+|     Поле      |     Тип      |  Атрибуты  |                Описание                |
+|:-------------:|:------------:|:----------:|:--------------------------------------:|
+|   author_id   |     int      | PK, AI, NN |    Уникальный идентификатор автора     |
+|  first_name   | String(255)  |     NN     |               Имя автора               |
+|   last_name   | String(255)  |     NN     |             Фамилия автора             |
+| contact_email | String(255)  |     NN     |        Электронная почта автора        |
+|    website    | String(1025) |     N      | Персональный сайт автора (если указан) |
+|   birthday    |   datetime   |     N      |          Дата рождения автора          |
+|  nationality  | String(255)  |     N      |         Страна рождения автора         |
+|  description  |     str      |     N      | Краткое описание или биография автора  |
 
 **Связи**
 
@@ -840,11 +856,11 @@
 
 **Поля**
 
-|       Поле        | Тип |                       Атрибуты                       |                   Описание                   |
-|:-----------------:|:---:|:----------------------------------------------------:|:--------------------------------------------:|
-| author_curator_id | int | primary_key=True, autoincrement=True, nullable=False |   Уникальный идентификатор записи куратора   |
-|    account_id     | int |     ForeignKey("users.user_id"), nullable=False      |  Пользователь, назначенный куратором автора  |
-|     author_id     | int |   ForeignKey("authors.author_id"), nullable=False    | Автор, которого курирует данный пользователь |
+|       Поле        | Тип |          Атрибуты           |                   Описание                   |
+|:-----------------:|:---:|:---------------------------:|:--------------------------------------------:|
+| author_curator_id | int |         PK, AI, NN          |   Уникальный идентификатор записи куратора   |
+|    account_id     | int |   FK("users.user_id"), NN   |  Пользователь, назначенный куратором автора  |
+|     author_id     | int | FK("authors.author_id"), NN | Автор, которого курирует данный пользователь |
 
 **Связи**
 
@@ -860,10 +876,10 @@
 
 **Поля**
 
-|   Поле    | Тип |                             Атрибуты                              |       Описание       |
-|:---------:|:---:|:-----------------------------------------------------------------:|:--------------------:|
-| author_id | int | ForeignKey("authors.author_id"), primary_key=True, nullable=False | Идентификатор автора |
-|  book_id  | int |   ForeignKey("books.book_id"), primary_key=True, nullable=False   | Идентификатор книги  |
+|   Поле    | Тип |            Аттрибуты            |       Описание       |
+|:---------:|:---:|:-------------------------------:|:--------------------:|
+| author_id | int | FK("authors.author_id"), PK, NN | Идентификатор автора |
+|  book_id  | int |   FK("books.book_id"), PK, NN   | Идентификатор книги  |
 
 **Связи**
 
@@ -883,16 +899,16 @@
 
 **Поля**
 
-|      Поле      |    Тип    |                       Атрибуты                       |             Описание              |
-|:--------------:|:---------:|:----------------------------------------------------:|:---------------------------------:|
-|  publisher_id  |    int    | primary_key=True, autoincrement=True, nullable=False | Уникальный идентификатор издателя |
-| publisher_name | str(255)  |                    nullable=False                    |         Название издателя         |
-|    website     | str(1025) |                    nullable=True                     |    Сайт издателя (если указан)    |
-| contact_email  | str(255)  |                    nullable=False                    |    Электронная почта издателя     |
-| contact_phone  |  str(50)  |                    nullable=False                    |         Телефон издателя          |
-|  founded_year  | datetime  |                    nullable=False                    |    Дата основания издательства    |
-|  description   |    str    |                    nullable=False                    |  Текстовое описание издательства  |
-|   created_at   | datetime  |      nullable=False, server_default=func.now()       |    Дата добавления записи в БД    |
+|      Поле      |     Тип      |           Атрибуты            |             Описание              |
+|:--------------:|:------------:|:-----------------------------:|:---------------------------------:|
+|  publisher_id  |     int      |          PK, AI, NN           | Уникальный идентификатор издателя |
+| publisher_name | String(255)  |              NN               |         Название издателя         |
+|    website     | String(1025) |               N               |    Сайт издателя (если указан)    |
+| contact_email  | String(255)  |              NN               |    Электронная почта издателя     |
+| contact_phone  |  String(50)  |              NN               |         Телефон издателя          |
+|  founded_year  |   datetime   |              NN               |    Дата основания издательства    |
+|  description   |     str      |              NN               |  Текстовое описание издательства  |
+|   created_at   |   datetime   | NN, server_default=func.now() |    Дата добавления записи в БД    |
 
 **Связи**
 
@@ -908,11 +924,11 @@
 
 **Поля**
 
-|         Поле         | Тип |                       Атрибуты                        |                        Описание                         |
-|:--------------------:|:---:|:-----------------------------------------------------:|:-------------------------------------------------------:|
-| publisher_curator_id | int | primary_key=True, autoincrement=True, nullable=False  |            Уникальный идентификатор куратора            |
-|      account_id      | int |      ForeignKey("users.user_id"), nullable=False      | Идентификатор пользователя, который является куратором  |
-|     publisher_id     | int | ForeignKey("publishers.publisher_id"), nullable=False | Идентификатор издательства, к которому привязан куратор |
+|         Поле         | Тип |             Атрибуты              |                        Описание                         |
+|:--------------------:|:---:|:---------------------------------:|:-------------------------------------------------------:|
+| publisher_curator_id | int |            PK, AI, NN             |            Уникальный идентификатор куратора            |
+|      account_id      | int |      FK("users.user_id"), NN      | Идентификатор пользователя, который является куратором  |
+|     publisher_id     | int | FK("publishers.publisher_id"), NN | Идентификатор издательства, к которому привязан куратор |
 
 **Связи**
 
@@ -928,10 +944,10 @@
 
 **Поля**
 
-|     Поле     | Тип |                                Атрибуты                                 |                           Описание                           |
-|:------------:|:---:|:-----------------------------------------------------------------------:|:------------------------------------------------------------:|
-| publisher_id | int | ForeignKey("publishers.publisher_id"), primary_key=True, nullable=False |    Идентификатор издательства, которое опубликовало книгу    |
-|   book_id    | int |      ForeignKey("books.book_id"), primary_key=True, nullable=False      | Идентификатор книги, которая была опубликована издательством |
+|     Поле     | Тип |               Атрибуты                |                           Описание                           |
+|:------------:|:---:|:-------------------------------------:|:------------------------------------------------------------:|
+| publisher_id | int | FK("publishers.publisher_id"), PK, NN |    Идентификатор издательства, которое опубликовало книгу    |
+|   book_id    | int |      FK("books.book_id"), PK, NN      | Идентификатор книги, которая была опубликована издательством |
 
 **Связи**
 
